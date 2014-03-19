@@ -1,0 +1,1236 @@
+#+title: Two sugars with your Contracts for Clojure Maps
+#+tags: clojure map accessor aspect contract
+#+options: H:4 toc:2
+#+options: ^:{}
+#+STARTUP: hidestars
+#+TAGS: noexport(e)
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+OCTOPRESS_CATEGORIES: clojure map aspect contract
+#+OCTOPRESS_COMMENTS: testing ox-md-octopress
+#+PROPERTY: :mkdirp yes
+
+* Introduction
+
+One of the [Clojure][ClojureHome] projects I've been working on uses
+multi-level (hierarchical) [maps][HashWikipedia] i.e. the values of the keys of a map at one level are often maps
+themselves. 
+
+A common enough use case and as [Fogus][FogusHome] and
+[Chris Houser][ChouserHome] observe in their book [The Joy of Clojure][BookJoC2ed] (section 5.6):
+
+#+BEGIN_QUOTE
+It’s difficult to write a program of any significant size without the
+need for a map of some sort.
+
+The use of maps is ubiquitous in writing software because frankly it’s
+difficult to imagine a more robust data structure.
+#+END_QUOTE
+
+Maps  have been around quite a while.  In their book [Introduction To
+Algorithms][CormenBookIntroductionToAlgorithms] _Cormen et al_ say Donald Knuth
+[attributed][CormenBookIntroductionToAlgorithmLuhn] the invention of
+maps to [Hans Peter Luhn][LuhnWikipedia] in early 1953.
+
+Using [maps][HashWikipedia] is very natural and easy in
+[Clojure][ClojureHome] and indeed many other languages that support
+them. Clojure takes [Alan Perlis's][PerlisTuringAward]
+famous quote to heart by providing a rich set of functions to manage maps:
+
+#+BEGIN_QUOTE
+It’s better to have 100 functions operate on one data structure than 10 functions on 10 data structures.
+#+END_QUOTE
+
+But using deep (multi-level) maps with many levels and many keys with long-ish
+descriptive names can make the code look very cluttered and prone to
+typos, misremembered key names, juxtaposition of levels, and similar,
+often _silent_, errors as e.g. _get_ and _get-in_ will return a
+value (nil) rather than raising an error, and _assoc_ and _assoc-in_
+wont care at all.
+
+Its very easy in [Clojure][ClojureHome] to write function(s) to encapsulate
+the accesses to a key's value, especially for multi-level keys, creating
+"helper" _putter_ and _getter_ accessors. 
+
+Arguably, maybe  a stretch, you could think of these accessors as
+[_higher order_][HigherOrderFunctionWikipedia] functions where the (implicit) input functions are e.g.
+_get_ or _assoc_.
+
+For example, and as usual a contrived example, where a deep multi-level map
+holds all the details of a house:
+
+#+BEGIN_SRC clojure :tangle no
+(defn change-kitchen-temperature
+  [house-state new-temperature]
+  (assoc-in house-state [:rooms :kitchen :properties :temperature] new-temperature))
+#+END_SRC
+
+#+BEGIN_SRC clojure :tangle no
+(defn install-kitchen-oven
+  [house-state new-oven]
+  (assoc-in house-state [:rooms :kitchen :appliances :cooking :oven] new-oven))
+#+END_SRC
+
+Which is nice (at least to me): semantically named accessors hiding
+the details of the key hierarchy.  If the hierarchy needs to change for
+any reason, only the accessor functions have to be changed.  A familiar enough
+paradigm from many languages.
+
+The other thing I've wanted to do  has been
+to apply  [contracts][Eiffel Design by Contract] to the _leaf_ values in the map. You could
+of course just use an [_assert_][ClojureDocsAssert] to apply a contract to a value in "open code".
+But that means the contract definition (i.e. assertion clause)
+is scattered over the code base, hard to change, inconsistency may
+creep in, etc.
+
+[Fogus's][FogusHome]
+[clojure.core.contracts][ClojureCoreContractsGithub] library uses
+[Clojure's][ClojureHome] [:pre and post
+assertions][FogusBlogClojurePreandPost] to apply contracts to a
+function's arguments and/or its result (return value). 
+
+In my recent [sugar post][RumfordBlogClojureContractsSugar] on contracts, I demonstrated a
+new library I've written
+[clojure-contracts-sugar][ClojureContractsSugarGithub] to add some
+productivity macros ("sugar") atop [Fogus's][FogusTwitter] [library][ClojureCoreContractsGithub].
+
+In a nice bit of synergy, if you use _putter_ and _getter_ accessors
+for a map's _leaf_ values, you can apply also contracts to them.
+
+Enter my new library: [clojure-contracts-maps][ClojureMapAccessorsGithub] 
+
+#+BEGIN_SRC
+<!-- more -->
+#+END_SRC
+
+* A quick summary of clojure-contracts-maps
+
+Apart from the ability to apply rich contracts to the _leaf_ values,
+the new library support some other features.
+
+One feature useful to have is the opportunity to transform _map_ a
+key's value.
+In the case of a getter, the _mapper_ is applied *before* the value is
+returned effectively returning a _view_ of the value.  In the case of a _putter_,
+the _mapper_ can e.g. normalise the value in some way *before* the map
+is "updated".
+
+Its also useful, in a _getter_,  to support static and (per call) dynamic defaults for the key's
+value.
+
+You may also want to _monitor_ a key's access, especially when it
+changes, and have a unique error message - a _telltale_ - when a value
+fails a contract.
+
+* A few notes on contracts and constraints
+
+A _contract_ is made up of one or more _constraints_.
+
+Each contract can have constraints of two types: _suck_ constraints
+applied to a function's arguments and _spit_ constraints applied to
+the function's result
+
+*Putters* have a _suck_ contract for the key's new value  i.e the new value 
+is an _argument_ to the putter.
+
+*Getters* have _spit_ contracts as the value of the key (or its default)
+is the _result_ of the getter.
+
+If you want to use a mnemonic (see later) for a contract to apply to
+both the *getter* and *putter*, the mnemonic *must* have identical
+constraints for both _suck_ and _spit_.
+
+The macro _define-mnemonics_ will define a symmetric contract. For
+example, to define a symmetric mnemonic _:key-value-is-a-map-with-numeric-values_
+
+#+BEGIN_SRC clojure :tangle no
+(define-mnemonics
+  key-mnemonics {:key-value-is-a-map-with-numeric-values [map? (every? number? (vals arg0))]}) 
+#+END_SRC
+
+This is the same as the explicit call below to _configure-contracts-store_
+in _clojure-contracts-sugar_
+
+#+BEGIN_SRC clojure :tangle no
+(configure-contracts-store
+ aspect-mnemonic-definitions
+ {:key-value-is-a-map-with-numeric-values
+  {:suck [map? (every? number? (vals arg0))]
+   :spit [map? (every? number? (vals arg0))]}}) 
+#+END_SRC
+
+Note you can define multiple mnemonics is the call to
+_define-mnemonics_, just add more key-value pairs in the
+_key-mnemonics_ map.
+
+* The Code
+
+** Jar is on Clojars
+
+The jar is on [Clojars][ClojarsClojureContractsMaps]:
+
+[Leiningen][LeiningenHome] dependency information:
+
+#+BEGIN_SRC clojure :tangle no
+[name.rumford/clojure-contracts-maps "0.1.0"]
+#+END_SRC
+
+[Maven][MavenHome] dependency information:
+
+#+BEGIN_SRC xml :tangle no
+<dependency>
+  <groupId>name.rumford</groupId>
+  <artifactId>clojure-contracts-maps</artifactId>
+  <version>0.1.0</version>
+</dependency>
+#+END_SRC
+
+** Code is on Github
+
+The code can be found on [github][ClojureMapAccessorsGithub]
+as a [Leiningen][LeiningenHome]
+project so you'll want Leiningen [installed][LeiningenGithub].
+
+The project structure is Maven style but there is only Clojure today
+i.e. _./src/main/clojure_ and _./src/test/clojure_.
+
+** Tests
+
+There are a number of tests that can be run offering reasonable coverage:
+
+#+BEGIN_SRC bash
+lein test
+#+END_SRC
+
+** Examples
+
+The examples below can be found in the repo's examples folder
+(specifically _./examples/map-examples_) and they can be run using
+_lein_:
+
+#+BEGIN_SRC bash :tangle no
+cd ./examples/map-examples
+lein run -m map-examples1
+#+END_SRC
+
+#+BEGIN_SRC clojure :mkdirp yes :exports none :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+(ns map-examples1
+  (:require [clojure-contracts-maps :as cma
+             :refer (define-map-get-accessor
+                      define-map-put-accessor
+                      compose-map-get-accessor
+                      define-map-accessors
+                      define-mnemonics)]
+            ;;[clojure-potrubi.tests.harnesses :as potrubi-tests-harnesseses :refer (will-work will-fail)]
+            [clojure-carp :as carp]
+            [clojure-potrubi.traces.trace :as trace :refer (macro-set-trace set-trace trace-configure)]))
+
+(macro-set-trace true *ns* "ENTR")
+(set-trace true *ns* "ENTR")
+(trace-configure :first-telltale-format-specification "%-40s")
+#+END_SRC
+
+The examples use a couple of harness functions - _will-work_ and
+_will-fail_ - to run tests.
+
+_will-work_ takes as arguments the expected result, the accessor
+function and a list of the accessor's arguments. 
+
+_will-fail_ takes just the accessor function and its arguments and
+catches the *AssertionError* expected to be thrown.
+
+#+BEGIN_SRC clojure :mkdirp yes :exports both :tangle :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Helper for accessor examples expected to work.  Returns the expected result, else fails
+
+(defn will-work
+  [expected-result fn-accessor & fn-args]
+  (assert (= expected-result (apply fn-accessor fn-args)))
+  (println "will-work" "worked as expected" "expected-result" expected-result "fn-accessor" fn-accessor "fn-args" fn-args)
+  expected-result)
+
+;; Helper for accessor examples expected to fail.  Catches the expected AssertionError, else fails.
+
+(defn will-fail
+  [fn-accessor & fn-args]
+  (try
+    (do
+      (apply fn-accessor fn-args)
+      (assert (println "will-fail" "DID NOT FAIL" "did not cause AssertionError" "fn-accessor" fn-accessor "fn-args" fn-args)))
+    (catch AssertionError e
+      (println "will-fail" "failed as expected" "fn-accessor" fn-accessor "fn-args" fn-args))))
+
+#+end_src
+
+#+BEGIN_QUOTE
+The _./doc_ folder contains the source of this post: it is an [emacs][emacshome] [org][orgmodehome] file [tangled][orgmodemanualextractsourcecode] to generate the examples project.
+#+END_QUOTE
+
+#+BEGIN_SRC clojure  :exports none :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Wrapper to run all tests
+(defn run-all-tests
+ [& args]
+#+end_src
+
+
+* Getters with Simple Contracts
+
+To define a getter call the _define-map-get-accessor_ macro with its
+(minimum) arguments: 
+
+1. the key's name; and 
+
+2. the contract (constraints) to enforce on the key's value
+
+#+BEGIN_QUOTE
+Remember: *getter* contracts have _spit_ constraints - the contract is
+applied to the result of the getter.
+#+END_QUOTE
+
+
+** Example - a getter for a key with a numeric value
+
+For example to ensure the value of key _:a_ is a number:
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a getter for a key with a numeric value
+
+;; This example shows how to define a getter function that ensures the
+;; returned value of key :a is a number:
+ 
+(def get-key-a (define-map-get-accessor :a :number))
+
+;; Explcitly call the function
+
+(get-key-a {:a 1})
+;; =>
+1
+
+;; But lets use the will-work helper to ensure the result is as expected
+
+(will-work 1 get-key-a {:a 1}) 
+;; =>
+1
+#+end_src
+
+#+BEGIN_QUOTE
+Its worth noting that _:number_ here implies {:spit number?}
+#+END_QUOTE
+
+** Example - a getter using static and/or dynamic defaults
+
+You can define the _getter_ accessor  with a static default
+value to be returned if the key is not present in the map (exact
+the same semantics as _get_ with a default value).
+
+#+BEGIN_QUOTE
+Note the contract is applied to the *result* of the accessor so
+defaults must comply with the contract.
+
+This is lazy though -  if a  default is never needed,
+the contract will never be applied to it.
+#+END_QUOTE
+
+To provide a _static_ default use the optional parameter _default_ on
+the call to _define-map-get-accessor_.
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a getter with a static default for key :d
+ 
+(def get-key-d (define-map-get-accessor :d :number default 42))
+
+;; This will work
+
+(will-work 42 get-key-d {})
+;; =>
+42
+
+;; Note the key is present but its value of nil will fail the :number contract
+
+(will-fail get-key-d {:d nil}) 
+#+end_src
+
+Alternatively a dynamic default can be provided as the second argument
+in a call to the getter. 
+
+The dynamic default takes precedence over the static one (if supplied).
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a getter called with a dynamic, per call, default for key :d
+
+;; The key's value, if present, alway takes precedence over any default
+
+(will-work 55 get-key-d {:d 55} 99)
+;; =>
+55
+
+;; The static default (if supplied) is used if the key is not present
+
+(will-work 42 get-key-d {}) 
+;; =>
+42
+
+;; But a per-call dynamic default take precedence over the static one
+
+(will-work 99 get-key-d {} 99)
+;; =>
+99
+
+(will-work 567 get-key-d {} 567)
+;; =>
+567
+#+end_src
+
+
+* Putters with Simple Contracts
+
+A simple putter uses Clojure's _assoc_ function and returns the updated
+map; the original map is, of course, unchanged.
+
+You can define equivalent _putter_ accessors, constrained in the
+same way as  _getters_, by calling the _define-map-put-accessor_ macro  with its
+(minimum) parameters (same as for a getter): 
+
+1. the key's name; and
+
+2. the contract (constraints) to enforce on the key's value
+
+#+BEGIN_QUOTE
+Remember: *putter* contracts have _suck_ constraints - the contract is
+applied to the argument with (new) value of the key.
+#+END_QUOTE
+
+** Example - a putter for a key with a numeric value
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - define a putter for the value of key :d which must be a number
+
+(def put-key-d (define-map-put-accessor :d :number))
+
+;; Create a new map with the new value for key :d
+
+(def map-with-old-value-of-d {:d 99})
+
+(def map-with-new-value-of-d (put-key-d map-with-old-value-of-d 123))
+
+;; Using the getter on the updated map will return the new value of :d
+
+(will-work 123 get-key-d map-with-new-value-of-d)
+;; =>
+123
+
+;; The old map is of course unchanged
+
+(will-work 99 get-key-d map-with-old-value-of-d)
+;; =>
+99
+#+end_src
+
+
+* Using a telltale to aid diagnosis of assertion errors
+
+Errors generated by Clojure's [pre and post assertions][[[FogusBlogClojurePreAndPost]]] 
+are of type *AssertionError*.
+
+Although they produce a (Java) stack track and precisely specify the
+assertion causing the error, they do not provide any information to
+identify the context  of the error i.e. which key suffered the error?
+
+As an aid to providing some context and help identify the
+cause of the error, you can provide an optional _telltale_ parameter to the
+accessor function definition.  The _telltale_ is a description (string) to be printed
+if/when an *AssertionError* occurs.
+
+** Example - a getter with a telltale
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a getter with a telltale
+ 
+(def get-key-d (define-map-get-accessor :d :number default 42 telltale "The value of key :d was not a number"))
+
+;; The call to get-key-d below will fail with an asertion error
+
+(will-fail get-key-d {:d "value of d must be a string else will fail"}) 
+;; =>  will fail with message something like:
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:d "value of d must be a string else will fail"}< REASON The value of key :d was not a number
+#+end_src
+
+** Example - a putter with a telltale
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a putter with a telltale
+ 
+(def put-key-e (define-map-put-accessor :e :string telltale "The new value of key :e was not a string"))
+
+;; The call to put-key-e below will fail with an asertion error
+
+(will-fail put-key-e {:e ":e is always a string"} 123) 
+;; =>  will fail with message something like:
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:d ":e is always a string"}< REASON The new value of key :e was not a string
+#+end_src
+
+
+* Contracts for Keys with multiple constraints
+
+In  the examples so far the contract (constraints)  applied to the value of a
+key has been simple - e.g. just a number or string.
+
+In fact, contracts  can be far "richer": You can use anything supported by
+[clojure-contracts-sugar][ClojureContractsSugarGithub].  
+
+Rich contracts were illustrated in my 
+[contracts sugar post][RumfordBlogClojureContractsSugar] and allow one or more 
+constraints to be applied to the key's value.  
+
+Multiple constraints can be specified in the definition of the accessor simply as a vector of the individual constraints.
+
+Or you can use _mnemonics_ to "package" rich, complex contracts with multiple constraints,
+again as described in the [sugar post][RumfordBlogClojureContractsSugar].
+
+Some examples should help flesh this out.
+
+** Example - a getter for a positive numeric key value
+
+To ensure a key's value is a positive number, the contract's vector of
+constraints would be:
+
+#+BEGIN_SRC clojure
+[:number :pos]
+#+END_SRC
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a getter for a positive numeric key value
+
+(def get-key-m (define-map-get-accessor :m [:number :pos] telltale ":m must be a positive number"))
+
+;; This works
+
+(will-work 3 get-key-m {:m 3})
+;; =>
+3
+
+;; But this will fail
+
+(will-fail get-key-m {:m -3})
+;; => And should produce a message like:
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:m -3}< KEY :m REASON :m must be a positive number
+#+end_src
+
+** Example - a getter to ensure a key's value is a map with keyword keys and numeric values
+
+Using an example based on one in the [sugar
+post][RumfordBlogClojureContractsSugar], this one needs to ensure a key's new value is a map, and its keys are keywords and
+the values are numbers. The contract is:
+
+#+BEGIN_SRC  clojure
+[:map (every? keyword? (keys arg0)) (every? number? (vals arg0))]
+#+END_SRC
+
+Note the key's value is available for use explicitly in the contract
+as _arg0_ - see the [sugar post][RumfordBlogClojureContractsSugar] for
+an explanation of the use of _relative_ argument names such as _arg0_.
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a getter to ensure a key's value is a map with keyword keys and numeric values
+
+;; Note the constraint form uses arg0 to refer to the passed map
+
+(def get-key-n (define-map-get-accessor :n [:map (every? keyword? (keys arg0)) (every? number? (vals arg0))] telltale ":n must be a map with keywords keys and numeric values"))
+
+;; This works
+
+(will-work {:a 1 :b 2 :c 3} get-key-n {:n {:a 1 :b 2 :c 3}})
+;; =>
+{:a 1 :b 2 :c 3}
+
+;; But this will fail
+
+(will-fail get-key-n {:n {"x" 1 "y" 2 "z" 3}})
+;; => And should produce a message like:
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:n {"x" 1, "y" 2, "z" 3}}< KEY :n REASON :n must be a map with keywords keys and numeric values
+#+end_src
+
+** Example - a getter with a custom predicate
+
+You can define your own predicate functions, not just use
+[Clojure's][ClojureHome] "built-ins" (e.g. _map?_, _number?_,
+_string?_, etc). For example, a predicate function to ensure the value is a map with
+keywords keys and numeric values would be
+something like this:
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a custom predicate to ensure a map's keys are keywords and values are numeric
+
+(defn is-map-with-keyword-keys-and-numeric-values?
+  [source-map]
+  {:pre [(map? source-map) (every? keyword? (keys source-map)) (every? number? (vals source-map))]}
+  source-map)
+#+end_src
+
+# #+BEGIN_QUOTE
+# Note the predicate function must be fully resolved in the call to the accessor definition by adding a [syntax-quote][8thLightBlokQuotingWithoutConfusion] (single back quote).
+# #+END_QUOTE
+
+The custom predicate can be used in the accessor definition just like
+a "built-in":
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a rich getter using a custom predicate
+
+(def get-key-p (define-map-get-accessor :p is-map-with-keyword-keys-and-numeric-values?  telltale ":p failed predicate is-map-with-keyword-keys-and-numeric-values?"))
+
+;; This works
+
+(will-work {:a 1 :b 2 :c 3} get-key-p {:p {:a 1 :b 2 :c 3}})
+;; =>
+{:a 1 :b 2 :c 3}
+
+;; But this will fail
+
+(will-fail get-key-p {:p {"x" 1 "y" 2 "z" 3}})
+;; => And should produce a message like:
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:p {"x" 1, "y" 2, "z" 3}}< KEY :p REASON :p failed predicate is-map-with-keyword-keys-and-numeric-values?
+#+end_src
+
+** Example - a getter with a custom mnemonic for the key
+
+_Mnemonics_ are a feature of
+[clojure-contracts-sugar][ClojureContractsSugarGithub] for defining,
+re-using and composing contracts, usually with multiple constraints.
+
+This example again is based loosely on one in my [sugar
+post][RumfordBlogClojureContractsSugar] and demonstrates how to implement the
+_is-map-with-keyword-keys-and-numeric-values?_ predicate function
+using a mnemonic.
+
+#+BEGIN_QUOTE
+Note the example uses the *sugar* macro _define-mnemonics_ to simplify the
+definition of a symmetric (i.e. _suck_ and _spit_) contract suitable
+for use in the definition of both a getter (spit) *and* putter (suck).
+#+END_QUOTE
+
+#+BEGIN_SRC clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Define a custom mnemonic map-special ensuring a map with keyword keys and numeric values.
+
+;; Note the mnemonic is suitable for a both a getter and putter i.e it has the same *suck* and *spit* constraints
+
+(define-mnemonics
+  key-mnemonics {:key-value-is-a-map-with-numeric-values [map? (every? number? (vals arg0))]}) 
+#+END_SRC
+
+The example:
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a getter with a custom mnemonic for the key
+
+;; Use the :key-value-is-a-map-with-numeric-values mnemonic for the key contract 
+;; to ensure the key's value is a map with numeric values.
+
+(def get-key-q (define-map-get-accessor :q :key-value-is-a-map-with-numeric-values telltale ":q failed contract key-value-is-a-map-with-numeric-values"))
+
+;; This works
+
+(will-work {:a 1 :b 2 :c 3} get-key-q {:q {:a 1 :b 2 :c 3}})
+;; =>
+{:a 1 :b 2 :c 3}
+
+;; But this will fail
+
+(will-fail get-key-q {:q {:a :one :b :two :c :three}})
+;; => And should produce a message like:
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:q {:a :one :b :two :c :three}}< KEY :q REASON :q failed contract key-value-is-a-map-with-numeric-values
+#+end_src
+
+
+* Contracts for the Map
+
+So far, I've not said anything about the map argument itself, or
+whether a contract (constraints) is applied to it.
+
+In fact, behind the scenes, a contract *is*  applied automatically to
+the map but its minimal: just _map?_
+
+But the default contract for the map  can be overidden using the
+_map-contract_ parameter on the call to e.g.
+_define-map-get-accessor_.
+
+Just like contracts for a key, map contracts can be anything
+supported by [clojure-contracts-sugar][ClojureContractsSugarGithub],
+especially mnemonics.
+
+** Example - applying a contract to the map itself
+
+In the example below the _sugar_ macro _define-mnemonics_
+defines a contract suitable for the map argument (specifically a
+_suck-only_ contract).
+
+It also defines a key mnemonic to ensure the key's value is a map with
+positive numeric values.
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - applying a contract to the map itself
+
+;; Define the mnemonics
+
+(define-mnemonics
+  map-mnemonics {:map-with-keyword-keys [map? (every? keyword? (keys arg0))]}
+
+  key-mnemonics {:key-is-a-map-with-positive-numeric-values [map? (every? number? (vals arg0)) (every? pos? (vals arg0))] }) 
+
+;; Use both contracts
+
+(def get-key-q (define-map-get-accessor :q :key-is-a-map-with-positive-numeric-values 
+                 map-contract :map-with-keyword-keys telltale ":q failed key contract key-is-a-map-with-positive-numeric-values or map contract map-with-keyword-keys"))
+
+;; This works
+
+(will-work {:a 1 :b 2 :c 3} get-key-q {:q {:a 1 :b 2 :c 3}})
+;; =>
+{:a 1 :b 2 :c 3}
+
+;; But this will fail as the value of :a is -1
+
+(will-fail get-key-q {:q {:a -1 :b 2 :c 3}})
+;; => And should produce a message like:
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:q {:a -1 :b 2 :c 3}}}< KEY :q REASON :q failed key contract :key-is-a-map-with-positive-numeric-values or map contract map-with-keyword-keys
+#+end_src
+
+
+* Using Transformation Functions (mappers)
+
+** Example - putters with mappers
+
+Sometimes its useful to be also to transform - _map_ - the (new) value of a key
+before _putting_ into the map.  For example to _normalise_ the value in
+some way (e.g. - trivially - string-ify and lower case).
+
+To provide a transformation function, use the _mapper_ parameter on
+the call to _define-map-putter_.  Your can specify more than one
+mapper - just provide a vector of them.  Multiple mappers are
+applied in the same order as [comp][ClojureDocsComp]  i.e. rightmost first.
+
+Note the key's contract is applied to the *transformed* value.
+
+The example has a mapper that just converts the argument into a string
+and counts the number of characters.  (Note the stringified keyword
+includes the leading colon.)
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - putters with mappers
+
+(def put-key-f (define-map-put-accessor :f :number  mapper (fn [s] (count (str s))) telltale ":f must be a number"))
+
+;; These will work
+
+(will-work {:f 6} put-key-f {} "6chars")
+(will-work {:f 7} put-key-f {} :7chars)
+#+end_src
+
+** Example - getters with mappers
+
+In a similar vein, for a _getter_, there may be times when it is
+useful to transform the key's value  *before* it is returned.
+
+For example, defining additional _getters_ for the same key that holds
+a map to return _views_ of the value e.g. just the keys, just the
+values, the sum of the values, whatever. Or, perhaps, create a
+derivative value e.g. instantiate a Java class instance.
+
+When using a _mapper_ with a _getter_, the contract (e.g. :number)
+is applied to the *transformed* value, not the value itself
+(e.g. :map). (You could apply a contract to the
+key's actual value using the map contract.)
+
+Note in the example below a key mnemonic is applied to the map.  This
+is ok; only the _suck_ constraints in the key mnemonic will be
+applied to the map.
+
+The example also shows how mnemonics can be *composed* - see the
+[sugar post][RumfordBlogClojureContractsSugar] for details. Composed
+mnemonics in the call to _define-mnemonics_ are:
+
+#+BEGIN_SRC clojure :tangle no
+ :key-is-a-map-with-keyword-keys-and-postive-numeric-values [:map-with-keyword-keys :map-with-positive-numeric-values]
+#+END_SRC
+
+and
+
+#+BEGIN_SRC clojure :tangle no
+ :collection-of-positive-numeric-values [:collection-of-numeric-values (every? pos? arg0)]
+#+END_SRC
+
+The example:
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - getters with mappers
+
+;; Define some mnemonics. Note a key contract mnemonic is applied to the
+;; map. Also mnemonics are composed
+
+(define-mnemonics
+  key-mnemonics {:map-with-keyword-keys [map? (every? keyword? (keys arg0))]
+
+                 :map-with-positive-numeric-values [map? (every? number? (vals arg0)) (every? pos? (vals arg0))]
+
+                 :key-is-a-map-with-keyword-keys-and-postive-numeric-values [:map-with-keyword-keys :map-with-positive-numeric-values]
+
+                 :collection-of-keywords [(coll? arg0) (every? keyword? arg0)]
+
+                 :collection-of-numeric-values [(coll? arg0) (every? number? arg0)]
+
+                 :collection-of-positive-numeric-values [:collection-of-numeric-values (every? pos? arg0)]})
+
+
+(def get-key-g (define-map-get-accessor :g
+                 :key-is-a-map-with-keyword-keys-and-postive-numeric-values
+                 map-contract :map-with-keyword-keys telltale ":g must be a map with keyword keys and postivie values"))
+
+;; Define extra getters for the keys and values of :g's map,
+;; both of which must be collections (coll?) of keywords or positive
+;; numeric values
+
+(def get-key-g-keys (define-map-get-accessor :g :collection-of-keywords
+                      map-contract :map-with-keyword-keys mapper (fn [m] (keys m)) telltale ":g keys must be a collection"))
+
+(def get-key-g-vals (define-map-get-accessor :g :collection-of-positive-numeric-values
+                      map-contract :map-with-keyword-keys mapper (fn [m] (vals m)) telltale ":g values must be a collection"))
+
+;; Test data
+
+(def test-map1 {:g {:a 1 :b 2 :c 3}})
+(def test-map1-g-keys (keys (:g test-map1)))
+(def test-map1-g-vals (vals (:g test-map1)))
+
+;; Test the keys
+
+(will-work test-map1-g-keys get-key-g-keys test-map1)
+;; =>
+'(:a :c :b)
+
+;; Test the values
+
+(will-work test-map1-g-vals get-key-g-vals test-map1)
+;; =>
+'(1 3 2)
+
+;; Another getter to sum the values
+
+(def get-key-g-sum-vals (define-map-get-accessor :g :number mapper (fn [m] (apply + (vals m))) telltale ":g values sum must be a number"))
+
+(will-work 6 get-key-g-sum-vals test-map1)
+;; =>
+6
+#+end_src
+
+
+* Using a Monitor
+
+A monitor provides a _hook_ to call an arbitrary function in an accessor.
+The result of a monitor is ignored.  Monitors can be used for any
+purpose e.g. logging, diagnostics, communications with other
+processes, whatever.
+
+A monitor is specified using the _monitor_ parameter.
+
+** Example - a getter with a monitor
+
+If provided, the monitor function in a getter is called with at least the following arguments:
+
+1. the key name;
+
+2. the key value (transformed if required); and 
+
+3. the original (argument) map.
+
+You can, optionally, add your own additional arguments using the
+_monitor-args_ parameter, and these are passed "as-is"
+to the monitor function after the other arguments.  The _monitor-args_ should
+be a vector.
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a getter with a monitor
+
+;; This is the monitor function
+
+(defn monitor-get-key-j
+  [key-name key-value arg-map & opt-args]
+  (println "monitor-get-key-j" "key-name" key-name "key-value" key-value "arg-map" arg-map "opt-args" (count opt-args) opt-args))
+
+(def get-key-j (define-map-get-accessor :j :number monitor monitor-get-key-j monitor-args ["opt arg1" 2 :three]))
+
+;; The getter works as usual
+
+(will-work 456 get-key-j {:j 456})
+;; =>
+456
+;; And should display the monitor message:
+;; monitor-get-key-j key-name :j key-value 456 arg-map {:j 456} opt-args 3 (opt-arg1 2 :three)
+#+end_src
+
+** Example - a putter with a monitor
+
+If provided, a putter's monitor function is called always with the following arguments:
+
+1. the key name;
+
+2. the key value (transformed if require); 
+
+3. the original (argument) map; and 
+
+4. the new (updated) map.
+
+As with a getter, and optionally, you pass your own additional arguments using the
+_monitor-args_ parameter.  
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - a putter with a monitor
+
+;; This is the monitor function
+
+(defn monitor-put-key-k
+  [key-name key-value arg-map new-map]
+  (println "monitor-put-key-k" "key-name" key-name "key-value" key-value "arg-map" arg-map "new-map" new-map))
+
+(def put-key-k (define-map-put-accessor :k :string monitor monitor-put-key-k))
+
+;; The putter works as usual
+
+(will-work {:k "new value of key :k"} put-key-k {:k "old value of key :k"} "new value of key :k")
+;; =>
+{:k "new value of key :k"}
+;; And should produce message like:
+;; monitor-put-key-k key-name :j key-value 456 arg-map {:k "old value of key :k"} new-map {:k "new value of key :k"}
+#+end_src
+
+
+* Multi-Level Keys
+
+You can also define accessors with multilevel keys and use (define) them in an equivalent way as when using
+_get-in_ and _assoc-in_ directly by providing a vector containing the
+key hierarchy in a call to e.g. _define-map_get_accessor_.
+
+*** Example - Explicit Multi-Level Getters
+
+In these getter examples the value of multilevel key _[:a :b :c]_ must be a string:
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - Explicit Multi-Level Getters
+
+;; This example shows how to define a getter function that ensures the
+;; returned value of multi-level key [:a :b :c] is a string. It also supplies a
+;; static default.
+
+(def get-key-abc (define-map-get-accessor [:a :b :c] :string default "static default for multilevel key [:a :b :c]" telltale "The value of multilevel key [:a :b :c] must be a string"))
+
+(will-work "value for multilevel key [:a :b :c]" get-key-abc {:a {:b {:d 4 :c "value for multilevel key [:a :b :c]"}}})
+;; =>
+"value for multilevel key [:a :b :c]"
+
+;; The below will fail as [:a :b :c] is not a string
+
+(will-fail get-key-abc {:a {:b {:d "value of [:a :b :d]" :c 99}}})
+;; => message something like
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:a {:b 99}}< KEY :a :b REASON The value of multilevel key [:a :b :c] must be a string
+
+;; Static Defaults work as expected
+(will-work "static default for multilevel key [:a :b :c]" get-key-abc {})
+;; =>
+"static default for multilevel key [:a :b :c]"
+
+;; Dynnamic Defaults work as expected
+(will-work "dynamic default for multilevel key [:a :b :c]" get-key-abc {} "dynamic default for multilevel key [:a :b :c]")
+;; =>
+"dynamic default for multilevel key [:a :b :c]"
+
+;; This will also work because, although the map does not have enough levels, the static default will be returned
+
+(will-work "static default for multilevel key [:a :b :c]" get-key-abc {:a {:b "value of b is not a map so key c can not exist"}})
+;; =>
+"static default for multilevel key [:a :b :c]"
+#+end_src
+
+*** Example - Explicit Multi-Level Putters
+
+Multilevel putters works equivalently.
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - Explicit Multi-Level Putters
+
+;; This example shows how to define a putter function for the string multilevel key [:a :b]:
+ 
+(def put-key-ab (define-map-put-accessor [:a :b] :string telltale "The value of multilevel key [:a :b] must be a string"))
+
+(will-work {:a {:b "cd"}}  put-key-ab {:a {:b "ab"}} "cd") 
+;; =>
+{:a {:b "cd"}}
+
+;; The below will fail as [:a :b] is not a string
+
+(will-fail put-key-ab {:a {:b "ab"}} 99)
+;; => message something like
+;; Contract Failure Value >class clojure.lang.PersistentArrayMap< >{:a {:b "ab"}}< KEY :a :b REASON The value of multilevel key [:a :b] must be a string
+#+end_src
+
+
+* Composing Multi-Level Accessors
+
+You might find it useful to be able to *compose* a (new) accessor
+using an existing one.
+
+For example you may want to define a "leaf" accessor for a key at the
+lowest level and then compose the leaf accessor with keys from the
+other, higher levels.  The point being that if the leaf key is used in more
+than one multilevel map, the leaf accessor only has to be defined
+once.
+
+Your can also e.g. use a mapper with a composed accessor and enforce a different contract on the
+mapped (derived) key value.  In the example below the composed accessor
+_get-key-z-from-pq_ defines a mapper to count the characters in the
+expected string and applies a _:number_ contract to the mapped value.
+The leaf accessor _get-key-z_ ensures the value fed into
+the mapper is a _:string_. (Note you can't use a dynamic default in
+this case because the _:number_ contract will fail a _:string_
+supplied as the dynamic default.)
+
+*** Example - composing a getter
+
+In this example the leaf accessor is for key _:z_.  
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - composing a getter
+
+;; Define the leaf accessor for key :z
+
+(def get-key-z (define-map-get-accessor :z :string default "static default for key :z" telltale "The value of :z must be a string"))
+
+;; Compose the leaf with a keys [:a :b]
+
+(def get-key-z-from-ab (compose-map-get-accessor [:a :b] get-key-z))
+
+;; This will work
+
+(will-work "multilevel key [:a :b :z] value" get-key-z-from-ab {:a {:b {:d 4 :z "multilevel key [:a :b :z] value"}}})
+;; =>
+"multilevel key [:a :b :z] value"
+
+;; The below will fail as [:a :b :z] is not a string
+
+(will-fail get-key-z-from-ab {:a {:b {:d "value of [:a :b :d]" :z 99}}})
+
+;; Defaults are hierachical and the "leafiest" one wins
+
+(will-work "static default for key :z" get-key-z-from-ab {})
+;; =>
+"static default for key :z"
+
+(will-work "dynamic default for key :z" get-key-z-from-ab {} "dynamic default for key :z")
+;; =>
+"dynamic default for key :z"
+
+;; Compose the leaf with keys [:p :q] *and* use a mapper to return a number
+
+(def get-key-z-from-pq (compose-map-get-accessor [:p :q] get-key-z  mapper (fn [x] (count x)) key-contract :number))
+
+(will-work 20 get-key-z-from-pq {:p {:q {:z "a string of 20 chars"}}} )
+;; =>
+20
+#+end_src
+    
+Finally, there is no actual restriction on leaf accessors being for just one level; they can
+be multilevel.
+
+
+* Defining both putter and getter 
+
+The definitions of a getter and putter for the same key share common
+arguments and its likely both accessors would be required. As a
+convenience, you can define both the putter and getter in one call
+to the _define-map-accessors_ macro.
+
+The base name of the accessors can be supplied using the optional
+_name_ argument and the getter and putter names are generated from it.
+For example if _name_ is _the-v-key_ then the putter name will be
+_put-the-v-key_ and the getter _get-the-v-key_. The value of _name_
+can be anything, it is "stringified" (using _str_) as necessary.
+
+Alternatively, you can explicitly specify the names of each accessor
+using the _get-name_ and _put-name_ parameters respectively.  These
+take priority over _name_.
+
+If no _name_, _get-name_ or _put-name_ parameters are provided, the
+name will be derived from the name of the key. So if the key's name is
+_:x_, the accessors will be _get-x_ and _put-x_.
+
+Other, accessor-specific parameters can be provided using the regular
+parameter (e.g. _telltale_  _monitor_ _mapper_ etc) prefixed by _get-_ or _put-_.
+
+*** Example - defining both accessors together
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - defining both accessors together
+
+;; The base name of the accessors has been provided: "the-v-key"
+
+(define-map-accessors :v is-map-with-keyword-keys-and-numeric-values? name the-v-key telltale ":p failed predicate is-map-with-keyword-keys-and-numeric-values?")
+
+;; This getter will work
+
+(will-work {:a 1 :b 2 :c 3} get-the-v-key {:v {:a 1 :b 2 :c 3}})
+;; =>
+{:a 1 :b 2 :c 3}
+
+;; But this will fail as expected
+
+(will-fail get-the-v-key {:v {"x" 1 "y" 2 "z" 3}})
+
+;; This putter will work
+
+(will-work {:v {:a 1 :b 2 :c 3}} put-the-v-key {} {:a 1 :b 2 :c 3})
+;; =>
+{:v {:a 1 :b 2 :c 3}}
+#+end_src
+
+*** Example - defining both accessors using the key's name to name the accessors
+
+#+begin_src clojure :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Example - defining both accessors using the key's name to name the accessors
+
+;; Note since no name parameters have been provided, the getter and
+;; putter will derived from the key's name and be called get-x and put-x respectively.
+
+(define-map-accessors :x is-map-with-keyword-keys-and-numeric-values?
+  get-telltale "the value of :x or a default was not a map with keyword keys and numeric values"
+  put-telltale "the new value of :x must be a map with keyword keys and numeric values"
+  )
+
+;; This getter will work
+
+(will-work {:a 1 :b 2 :c 3} get-x {:x {:a 1 :b 2 :c 3}})
+;; =>
+{:a 1 :b 2 :c 3}
+
+;; But this will fail as expected
+
+(will-fail get-x {:x {"x" 1 "y" 2 "z" 3}})
+
+;; This putter will work
+
+(will-work {:x {:a 1 :b 2 :c 3}} put-x {} {:a 1 :b 2 :c 3})
+;; =>
+{:x {:a 1 :b 2 :c 3}}
+#+end_src
+
+
+* Final Words
+
+[clojure-contracts-maps][ClojureMapAccessorsGithub] provides a useful
+additional feature layer sitting atop normal [Clojure][ClojureHome]
+maps.
+
+Using the library, its possible to apply Clojure's [pre and post conditions][FogusBlogClojurePreAndPost] to a map's key accesses in the
+same way as they can be applied to a function's arguments. The power
+of [clojure-contracts-sugar][ClojureContractsSugarGithub] (and
+implicitly [core.contracts][ClojureCoreContractsGithub]) allows for a
+very rich sets of constraints to be applied to a key's value.
+
+The opportunity to define the access "semantics" of a map's key via
+regular functions, ensuring the semantics are adhered to and/or applied
+consistently, is a useful and easy-to-use program-correctness aid.
+
+Using _mappers_ with a _getter_ provide a simple way of generating
+_views_ of a key's value, without affecting the original value.
+Conversely,  _mappers_ with a _putter_ facilitate e.g _normalising_ the
+key's (new) value before storing in the (updated) map.
+
+_Monitors_ provide a simple way of adding arbitrary, but neutral
+non-affecting logic, to the key's access. And a _telltale_ helps pin
+down where things went wrong.
+
+* Final, Final Words
+
+I've done a fair amount of Ruby meta programming.  An essential difference is
+[Clojure][ClojureHome] macros are compile-time whereas Ruby is
+run-time.
+
+But doing macro metaprogramming feels quite different:
+[Clojure][ClojureHome] works with values ([homoiconicity][HomoiconicityWikipedia])
+whereas Ruby metaprogramming works with text that is eval-ed.   
+
+One of the most noticeable differences I've found though (maybe just my
+style) is whereas in Ruby you build the complete code-as-text, with
+macros you can take an iterative approach i.e a top level macro
+returns one or more "calls" to lower
+level more-focused macros.
+
+There does seem to be a bit of a meme in the community along the lines of "If you are
+using a macro you are doing it wrong".  But, used wisely, macros are a
+fantastic (and sometimes essential) tool.
+
+But the objectives are the same whether Ruby or Clojure - removing boilerplate and getting
+to the heart of the problem rather than distracted by implementation details.
+
+#+BEGIN_SRC clojure  :exports none :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; Close the wrapper
+)
+#+end_src
+
+#+BEGIN_SRC clojure :exports none :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+;; prevent an error from lein run
+(defn -main
+  [& args]
+  ;;(profiling/profile :info :Arithmetic (dotimes [n 1] (run-all-tests args)))
+  (dotimes [n 1] (run-all-tests args)))
+#+END_SRC
+
+# #+BEGIN_SRC clojure :exports none :tangle ../examples/map-examples/src/main/clojure/map_examples1.clj
+# (defn -main [& args])
+# #+END_SRC
+
+#+BEGIN_SRC clojure :mkdirp yes  :exports none :tangle ../examples/map-examples/project.clj
+(defproject map-examples1 "0.1.0"
+  :description "Some examples of applying contracts to Clojure maps"
+  :url "https://github.com/ianrumford/clojure-contracts-maps"
+  :license {:name "MIT" :url "http://opensource.org/licenses/MIT"}
+  :dependencies [[org.clojure/clojure "1.5.1"]
+                 [name.rumford/clojure-contracts-sugar "0.2.0"]
+                 [name.rumford/clojure-contracts-maps "0.1.0"]]
+  :source-paths ["src/main/clojure"]
+  :test-paths   ["src/test/clojure"])
+#+END_SRC
+
+#+BEGIN_SRC
+[ClojureHome]: http:///clojure.org
+[JavaHome]: http://www.java.com
+[LeiningenHome]: http://leiningen.org/
+[LeiningenGithub]: https://github.com/technomancy/leiningen
+[MavenHome]: http://maven.apache.org/
+[ClojarsHome]: http://clojars.org
+[ClojarsClojureContractsMaps]: https://clojars.org/name.rumford/clojure-contracts-maps
+[ClojureCoreContractsGithub]: https://github.com/clojure/core.contracts
+[ClojureContractsSugarGithub]: https://github.com/ianrumford/clojure-contracts-sugar
+[ClojureMapAccessorsGithub]: https://github.com/ianrumford/clojure-contracts-maps
+[ClojureCoreContractsPostFirstTake]: http://ianrumford.github.io/blog/2012/11/17/first-take-on-contracts-in-clojure/
+[FogusBlogClojurePreAndPost]: http://blog.fogus.me/2009/12/21/clojures-pre-and-post/
+[EmerickHome]: http://cemerick.com/
+[GrandHome]: http://clj-me.cgrand.net/
+[CarperHome]: http://briancarper.net/
+[ClojureProgrammingBook]: http://www.clojurebook.com/
+[FogusHome]: http://blog.fogus.me
+[FogusTwitter]: https://twitter.com/fogus
+[CHouserHome]: http://old.n01se.net/chouser
+[BookJoC2ed]: http://www.manning.com/fogus2
+[RumfordBlogClojureContractsSugar]: http://ianrumford.github.io/blog/2014/02/19/a-little-sugar-with-your-clojure-aspect-contracts/
+[RumfordBlogClojureContractsFirstTake]: http://ianrumford.github.io/blog/2012/11/17/first-take-on-contracts-in-clojure/
+[emacshome]: http://www.gnu.org/software/emacs/
+[orgmodehome]: http://orgmode.org/
+[orgmodemanualextractsourcecode]: http://orgmode.org/org.html#Extracting-source-code
+[PerlisTuringAward]: http://amturing.acm.org/award_winners/perlis_0132439.cfm
+[HashWikipedia]: http://en.wikipedia.org/wiki/Hash_table
+[CormenBookIntroductionToAlgorithms]: http://www.amazon.co.uk/Introduction-Algorithms-Thomas-H-Cormen/dp/0262032937/ref=sr_1_1?s=books&ie=UTF8&qid=1392992028&sr=1-1&keywords=0262032937
+[CormenBookIntroductionToAlgorithmLuhn]: http://books.google.co.uk/books?id=NLngYyWFl_YC&pg=PA252&lpg=PA252&dq=luhn+hash+tables&source=bl&ots=BxWoJG3mJa&sig=cTpYRKlO-rNe8TDar3ko8bv4MQ8&hl=en&sa=X&ei=0UIHU662DKap7Abp1IHgCA&ved=0CFoQ6AEwBg#v=onepage&q=luhn%20hash%20tables&f=false
+[LuhnWikipedia]: http://en.wikipedia.org/wiki/Hans_Peter_Luhn
+[JavaWikiHashmap]: http://docs.oracle.com/javase/7/docs/api/java/util/HashMap.html
+[HigherOrderFunctionWikipedia]: http://en.wikipedia.org/wiki/Higher-order_function
+[Eiffel Design by Contract]: http://en.wikipedia.org/wiki/Eiffel_(programming_language)#Design_by_Contract
+[ClojureDocsAssert]: http://clojuredocs.org/clojure_core/clojure.core/assert
+[ClojureDocsComp]: http://clojuredocs.org/clojure_core/clojure.core/comp
+[HomoiconicityWikipedia]: http://en.wikipedia.org/wiki/Homoiconicity
+#+END_SRC

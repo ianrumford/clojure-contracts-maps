@@ -1,0 +1,1792 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Two sugars with your Contracts for Clojure Maps</title>
+<!-- 2014-03-19 Wed 17:52 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Ian Rumford" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Two sugars with your Contracts for Clojure Maps</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Introduction</a></li>
+<li><a href="#sec-2">2. A quick summary of clojure-contracts-maps</a></li>
+<li><a href="#sec-3">3. A few notes</a></li>
+<li><a href="#sec-4">4. The Code</a>
+<ul>
+<li><a href="#sec-4-1">4.1. Jar is on Clojars</a></li>
+<li><a href="#sec-4-2">4.2. Code is on Github</a></li>
+<li><a href="#sec-4-3">4.3. Tests</a></li>
+<li><a href="#sec-4-4">4.4. Examples</a></li>
+</ul>
+</li>
+<li><a href="#sec-5">5. Getters with Simple Contracts</a>
+<ul>
+<li><a href="#sec-5-1">5.1. Example - a getter for a key with a numeric value</a></li>
+<li><a href="#sec-5-2">5.2. Example - a getter using static and/or dynamic defaults</a></li>
+</ul>
+</li>
+<li><a href="#sec-6">6. Putters with Simple Contracts</a>
+<ul>
+<li><a href="#sec-6-1">6.1. Example - a putter for a key with a numeric value</a></li>
+</ul>
+</li>
+<li><a href="#sec-7">7. Using a telltale to aid diagnosis of assertion errors</a>
+<ul>
+<li><a href="#sec-7-1">7.1. Example - a getter with a telltale</a></li>
+<li><a href="#sec-7-2">7.2. Example - a putter with a telltale</a></li>
+</ul>
+</li>
+<li><a href="#sec-8">8. Contracts for Keys with multiple constraints</a>
+<ul>
+<li><a href="#sec-8-1">8.1. Example - a getter for a positive numeric key value</a></li>
+<li><a href="#sec-8-2">8.2. Example - a getter to ensure a key's value is a map with keyword keys and numeric values</a></li>
+<li><a href="#sec-8-3">8.3. Example - a getter with a custom predicate</a></li>
+<li><a href="#sec-8-4">8.4. Example - a getter with a custom mnemonic for the key</a></li>
+</ul>
+</li>
+<li><a href="#sec-9">9. Contracts for the Map</a>
+<ul>
+<li><a href="#sec-9-1">9.1. Example - applying a contract to the map itself</a></li>
+</ul>
+</li>
+<li><a href="#sec-10">10. Using Transformation Functions (mappers)</a>
+<ul>
+<li><a href="#sec-10-1">10.1. Example - putters with mappers</a></li>
+<li><a href="#sec-10-2">10.2. Example - getters with mappers</a></li>
+</ul>
+</li>
+<li><a href="#sec-11">11. Using a Monitor</a>
+<ul>
+<li><a href="#sec-11-1">11.1. Example - a getter with a monitor</a></li>
+<li><a href="#sec-11-2">11.2. Example - a putter with a monitor</a></li>
+</ul>
+</li>
+<li><a href="#sec-12">12. Multi-Level Keys</a></li>
+<li><a href="#sec-13">13. Composing Multi-Level Accessors</a></li>
+<li><a href="#sec-14">14. Defining both putter and getter</a></li>
+<li><a href="#sec-15">15. Final Words</a></li>
+<li><a href="#sec-16">16. Final, Final Words</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+One of the [Clojure][ClojureHome] projects I've been working on uses
+multi-level (hierarchical) [maps][HashWikipedia] i.e. the values of the keys of a map at one level are often maps
+themselves. 
+</p>
+
+<p>
+A common enough use case and as [Fogus][FogusHome] and
+[Chris Houser][ChouserHome] observe in their book [The Joy of Clojure][BookJoC2ed] (section 5.6):
+</p>
+
+<blockquote>
+<p>
+It’s difficult to write a program of any significant size without the
+need for a map of some sort.
+</p>
+
+<p>
+The use of maps is ubiquitous in writing software because frankly it’s
+difficult to imagine a more robust data structure.
+</p>
+</blockquote>
+
+<p>
+Maps  have been around quite a while.  In their book [Introduction To
+Algorithms][CormenBookIntroductionToAlgorithms] <span class="underline">Cormen et al</span> say Donald Knuth
+[attributed][CormenBookIntroductionToAlgorithmLuhn] the invention of
+maps to [Hans Peter Luhn][LuhnWikipedia] in early 1953.
+</p>
+
+<p>
+Using [maps][HashWikipedia] is very natural and easy in
+[Clojure][ClojureHome] and indeed many other languages that support
+them. Clojure takes [Alan Perlis's][PerlisTuringAward]
+famous quote to heart by providing a rich set of functions to manage maps:
+</p>
+
+<blockquote>
+<p>
+It’s better to have 100 functions operate on one data structure than 10 functions on 10 data structures.
+</p>
+</blockquote>
+
+<p>
+But using deep (multi-level) maps with many levels and many keys with long-ish
+descriptive names can make the code look very cluttered and prone to
+typos, misremembered key names, juxtaposition of levels, and similar,
+often <span class="underline">silent</span>, errors as e.g. <span class="underline">get</span> and <span class="underline">get-in</span> will return a
+value (nil) rather than raising an error, and <span class="underline">assoc</span> and <span class="underline">assoc-in</span>
+wont care at all.
+</p>
+
+<p>
+Its very easy in [Clojure][ClojureHome] to write function(s) to encapsulate
+the accesses to a key's value, especially for multi-level keys, creating
+"helper" <span class="underline">putter</span> and <span class="underline">getter</span> accessors. 
+</p>
+
+<p>
+Arguably, maybe  a stretch, you could think of these accessors as
+[_higher order_][HigherOrderFunctionWikipedia] functions where the (implicit) input functions are e.g.
+<span class="underline">get</span> or <span class="underline">assoc</span>.
+</p>
+
+<p>
+For example, and as usual a contrived example, where a deep multi-level map
+holds all the details of a house:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">change-kitchen-temperature</span>
+  [house-state new-temperature]
+  <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">assoc-in</span> house-state [<span style="color: #008b8b;">:rooms</span> <span style="color: #008b8b;">:kitchen</span> <span style="color: #008b8b;">:properties</span> <span style="color: #008b8b;">:temperature</span>] new-temperature<span style="color: #8c8c8c;">))</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">install-kitchen-oven</span>
+  [house-state new-oven]
+  <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">assoc-in</span> house-state [<span style="color: #008b8b;">:rooms</span> <span style="color: #008b8b;">:kitchen</span> <span style="color: #008b8b;">:appliances</span> <span style="color: #008b8b;">:cooking</span> <span style="color: #008b8b;">:oven</span>] new-oven<span style="color: #8c8c8c;">))</span>
+</pre>
+</div>
+
+<p>
+Which is nice (at least to me): semantically named accessors hiding
+the details of the key hierarchy.  If the hierarchy needs to change for
+any reason, only the accessor functions have to be changed.  A familiar enough
+paradigm from many languages.
+</p>
+
+<p>
+The other thing I've wanted to do  has been
+to apply  [contracts][Eiffel Design by Contract] to the <span class="underline">leaf</span> values in the map. You could
+of course just use an [_assert_][ClojureDocsAssert] to apply a contract to a value in "open code".
+But that means the contract definition (i.e. assertion clause)
+is scattered over the code base, hard to change, inconsistency may
+creep in, etc.
+</p>
+
+<p>
+[Fogus's][FogusHome]
+[clojure.core.contracts][ClojureCoreContractsGithub] library uses
+[Clojure's][ClojureHome] [:pre and post
+assertions][FogusBlogClojurePreandPost] to apply contracts to a
+function's arguments and/or its result (return value). 
+</p>
+
+<p>
+In my recent [sugar post][RumfordBlogClojureContractsSugar] on contracts, I demonstrated a
+new library I've written
+[clojure-contracts-sugar][ClojureContractsSugarGithub] to add some
+productivity macros ("sugar") atop [Fogus's][FogusTwitter] [library][ClojureCoreContractsGithub].
+</p>
+
+<p>
+In a nice bit of synergy, if you use <span class="underline">putter</span> and <span class="underline">getter</span> accessors
+for a map's <span class="underline">leaf</span> values, you can apply also contracts to them.
+</p>
+
+<p>
+Enter my new library: [clojure-contracts-maps][ClojureMapAccessorsGithub] 
+</p>
+
+<pre class="example">
+&lt;!-- more --&gt;
+</pre>
+</div>
+</div>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> A quick summary of clojure-contracts-maps</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Apart from the ability to apply rich contracts to the <span class="underline">leaf</span> values,
+the new library support some other features.
+</p>
+
+<p>
+One feature useful to have is the opportunity to transform <span class="underline">map</span> a
+key's value.
+In the case of a getter, the <span class="underline">mapper</span> is applied <b>before</b> the value is
+returned effectively returning a <span class="underline">view</span> of the value.  In the case of a <span class="underline">putter</span>,
+the <span class="underline">mapper</span> can e.g. normalise the value in some way <b>before</b> the map
+is "updated".
+</p>
+
+<p>
+Its also useful, in a <span class="underline">getter</span>,  to support static and (per call) dynamic defaults for the key's
+value.
+</p>
+
+<p>
+You may also want to <span class="underline">monitor</span> a key's access, especially when it
+changes, and have a unique error message - a <span class="underline">telltale</span> - when a value
+fails a contract.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> A few notes</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+A <span class="underline">contract</span> is made up of one or more <span class="underline">constraints</span>.
+</p>
+
+<p>
+Each contract can have constraints of two types: <span class="underline">suck</span> constraints
+applied to a function's arguments and <span class="underline">spit</span> constraints applied to
+the function's result
+</p>
+
+<p>
+<b>Putters</b> have a <span class="underline">suck</span> contract for the key's new value  i.e the new value 
+is an <span class="underline">argument</span> to the getter accessor.
+</p>
+
+<p>
+<b>Getters</b> have <span class="underline">spit</span> contracts as the value of the key (or its default)
+is the <span class="underline">result</span> of the function.
+</p>
+
+<p>
+If you want to use a mnemonic (see later) for a contract to apply to
+both the <b>getter</b> and <b>putter</b>, the mnemonic <b>must</b> have identical
+constraints for both <span class="underline">suck_and _spit</span>.
+</p>
+
+<p>
+The macro <span class="underline">define-mnemonics</span> will define a symmetric contract. For
+example, to define a symmetric mnemonic <span class="underline">:key-value-is-a-map-with-numeric-values</span>
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-mnemonics</span>
+  <span style="color: #0000ff;">key-mnemonics</span> {<span style="color: #008b8b;">:key-value-is-a-map-with-numeric-values</span> [map? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span>]}<span style="color: #8c8c8c;">)</span>
+</pre>
+</div>
+
+<p>
+This is the same as the explicit call below to <span class="underline">configure-contracts-store</span>
+in <span class="underline">clojure-contracts-sugar</span>
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #8c8c8c;">(</span>configure-contracts-store
+ aspect-mnemonic-definitions
+ {<span style="color: #008b8b;">:key-value-is-a-map-with-numeric-values</span>
+  {<span style="color: #008b8b;">:suck</span> [map? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span>]
+   <span style="color: #008b8b;">:spit</span> [map? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span>]}}<span style="color: #8c8c8c;">)</span>
+</pre>
+</div>
+
+<p>
+Note you can define multiple mnemonics is the call to
+<span class="underline">define-mnemonics</span>, just add more key-value pairs in the
+<span class="underline">key-mnemonics</span> map.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> The Code</h2>
+<div class="outline-text-2" id="text-4">
+</div><div id="outline-container-sec-4-1" class="outline-3">
+<h3 id="sec-4-1"><span class="section-number-3">4.1</span> Jar is on Clojars</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+The jar is on [Clojars][ClojarsClojureContractsMaps]:
+</p>
+
+<p>
+[Leiningen][LeiningenHome] dependency information:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">[name.rumford/clojure-contracts-maps <span style="color: #8b2252;">"0.1.0"</span>]
+</pre>
+</div>
+
+<p>
+[Maven][MavenHome] dependency information:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-xml">&lt;<span style="color: #0000ff;">dependency</span>&gt;
+  &lt;<span style="color: #0000ff;">groupId</span>&gt;name.rumford&lt;/<span style="color: #0000ff;">groupId</span>&gt;
+  &lt;<span style="color: #0000ff;">artifactId</span>&gt;clojure-contracts-maps&lt;/<span style="color: #0000ff;">artifactId</span>&gt;
+  &lt;<span style="color: #0000ff;">version</span>&gt;0.1.0&lt;/<span style="color: #0000ff;">version</span>&gt;
+&lt;/<span style="color: #0000ff;">dependency</span>&gt;
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-4-2" class="outline-3">
+<h3 id="sec-4-2"><span class="section-number-3">4.2</span> Code is on Github</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+The code can be found on [github][ClojureMapAccessorsGithub]
+as a [Leiningen][LeiningenHome]
+project so you'll want Leiningen [installed][LeiningenGithub].
+</p>
+
+<p>
+The project structure is Maven style but there is only Clojure today
+i.e. <span class="underline">./src/main/clojure</span> and <span class="underline">./src/test/clojure</span>.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-4-3" class="outline-3">
+<h3 id="sec-4-3"><span class="section-number-3">4.3</span> Tests</h3>
+<div class="outline-text-3" id="text-4-3">
+<p>
+There are a number of tests that can be run offering reasonable coverage:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-bash">lein test
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-4-4" class="outline-3">
+<h3 id="sec-4-4"><span class="section-number-3">4.4</span> Examples</h3>
+<div class="outline-text-3" id="text-4-4">
+<p>
+The examples below can be found in the repo's examples folder
+(specifically <span class="underline">./examples/map-examples</span>) and they can be run using
+<span class="underline">lein</span>:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-bash">cd ./examples/map-examples
+lein run -m map-examples1
+</pre>
+</div>
+
+<p>
+The examples use a couple of harness functions - <span class="underline">will-work</span> and
+<span class="underline">will-fail</span> - to run tests.
+</p>
+
+<p>
+<span class="underline">will-work</span> takes as arguments the expected result, the accessor
+function and a list of the accessor's arguments. 
+</p>
+
+<p>
+<span class="underline">will-fail</span> takes just the accessor function and its arguments and
+catches the <b>AssertionError</b> expected to be thrown.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Helper for accessor examples expected to work.  Returns the expected result, else fails</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">will-work</span>
+  [expected-result fn-accessor &amp; fn-args]
+  <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">assert</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">=</span> expected-result <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">apply</span> fn-accessor fn-args<span style="color: #8c8c8c;">)))</span>
+  <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"will-work"</span> <span style="color: #8b2252;">"worked as expected"</span> <span style="color: #8b2252;">"expected-result"</span> expected-result <span style="color: #8b2252;">"fn-accessor"</span> fn-accessor <span style="color: #8b2252;">"fn-args"</span> fn-args<span style="color: #8c8c8c;">)</span>
+  expected-result<span style="color: #8c8c8c;">)</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Helper for accessor examples expected to fail.  Catches the expected AssertionError, else fails.</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">will-fail</span>
+  [fn-accessor &amp; fn-args]
+  <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">try</span>
+    <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">do</span>
+      <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">apply</span> fn-accessor fn-args<span style="color: #8c8c8c;">)</span>
+      <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">assert</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"will-fail"</span> <span style="color: #8b2252;">"DID NOT FAIL"</span> <span style="color: #8b2252;">"did not cause AssertionError"</span> <span style="color: #8b2252;">"fn-accessor"</span> fn-accessor <span style="color: #8b2252;">"fn-args"</span> fn-args<span style="color: #8c8c8c;">)))</span>
+    <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">catch</span> <span style="color: #483d8b;">AssertionError</span> e
+      <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"will-fail"</span> <span style="color: #8b2252;">"failed as expected"</span> <span style="color: #8b2252;">"fn-accessor"</span> fn-accessor <span style="color: #8b2252;">"fn-args"</span> fn-args<span style="color: #8c8c8c;">))))</span>
+</pre>
+</div>
+
+<blockquote>
+<p>
+The <span class="underline">./doc</span> folder contains the source of this post: it is an [emacs][emacshome] [org][orgmodehome] file [tangled][orgmodemanualextractsourcecode] to generate the examples project.
+</p>
+</blockquote>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Getters with Simple Contracts</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+To define a getter call the <span class="underline">define-map-get-accessor</span> macro with its
+(minimum) arguments: 
+</p>
+
+<ol class="org-ol">
+<li>the key's name; and 
+</li>
+
+<li>the contract (constraints) to enforce on the key's value
+</li>
+</ol>
+
+<blockquote>
+<p>
+Remember: <b>getter</b> contracts have <span class="underline">spit</span> constraints - the contract is
+applied to the result of the getter.
+</p>
+</blockquote>
+</div>
+
+
+<div id="outline-container-sec-5-1" class="outline-3">
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> Example - a getter for a key with a numeric value</h3>
+<div class="outline-text-3" id="text-5-1">
+<p>
+For example to ensure the value of key <span class="underline">:a</span> is a number:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a getter for a key with a numeric value</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This example shows how to define a getter function that ensures the</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">returned value of key :a is a number:</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-a</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:a</span> <span style="color: #008b8b;">:number</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Explcitly call the function</span>
+
+<span style="color: #8c8c8c;">(</span>get-key-a {<span style="color: #008b8b;">:a</span> 1}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+1
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But lets use the will-work helper to ensure the result is as expected</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 1 get-key-a {<span style="color: #008b8b;">:a</span> 1}<span style="color: #8c8c8c;">)</span> 
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+1
+</pre>
+</div>
+
+<blockquote>
+<p>
+Its worth noting that <span class="underline">:number</span> here implies {:spit number?}
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-sec-5-2" class="outline-3">
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> Example - a getter using static and/or dynamic defaults</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+You can define the <span class="underline">getter</span> accessor  with a static default
+value to be returned if the key is not present in the map (exact
+the same semantics as <span class="underline">get</span> with a default value).
+</p>
+
+<blockquote>
+<p>
+Note the contract is applied to the <b>result</b> of the accessor so
+defaults must comply with the contract.
+</p>
+
+<p>
+This is lazy though -  if a  default is never needed,
+the contract will never be applied to it.
+</p>
+</blockquote>
+
+<p>
+To provide a <span class="underline">static</span> default use the optional parameter <span class="underline">default</span> on
+the call to <span class="underline">define-map-get-accessor</span>.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a getter with a static default for key :d</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-d</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:d</span> <span style="color: #008b8b;">:number</span> default 42<span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This will work</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 42 get-key-d {}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+42
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Note the key is present but its value of nil will fail the :number contract</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-d {<span style="color: #008b8b;">:d</span> nil}<span style="color: #8c8c8c;">)</span>
+</pre>
+</div>
+
+<p>
+Alternatively a dynamic default can be provided as the second argument
+in a call to the getter. 
+</p>
+
+<p>
+The dynamic default takes precedence over the static one (if supplied).
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a getter called with a dynamic, per call, default for key :d</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The key's value, if present, alway takes precedence over any default</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 55 get-key-d {<span style="color: #008b8b;">:d</span> 55} 99<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+55
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The static default (if supplied) is used if the key is not present</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 42 get-key-d {}<span style="color: #8c8c8c;">)</span> 
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+42
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But a per-call dynamic default take precedence over the static one</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 99 get-key-d {} 99<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+99
+
+<span style="color: #8c8c8c;">(</span>will-work 567 get-key-d {} 567<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+567
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6"><span class="section-number-2">6</span> Putters with Simple Contracts</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+A simple putter uses Clojure's <span class="underline">assoc</span> function and returns the updated
+map; the original map is, of course, unchanged.
+</p>
+
+<p>
+You can define equivalent <span class="underline">putter</span> accessors, constrained in the
+same way as  <span class="underline">getters</span>, by calling the <span class="underline">define-map-put-accessor</span> macro  with its
+(minimum) parameters (same as for a getter): 
+</p>
+
+<ol class="org-ol">
+<li>the key's name; and
+</li>
+
+<li>the contract (constraints) to enforce on the key's value
+</li>
+</ol>
+
+<blockquote>
+<p>
+Remember: <b>putter</b> contracts have <span class="underline">suck</span> constraints - the contract is
+applied to the argument with (new) value of the key.
+</p>
+</blockquote>
+</div>
+
+<div id="outline-container-sec-6-1" class="outline-3">
+<h3 id="sec-6-1"><span class="section-number-3">6.1</span> Example - a putter for a key with a numeric value</h3>
+<div class="outline-text-3" id="text-6-1">
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - define a putter for the value of key :d which must be a number</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">put-key-d</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-put-accessor</span> <span style="color: #0000ff;">:d</span> <span style="color: #008b8b;">:number</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Create a new map with the new value for key :d</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">map-with-old-value-of-d</span> {<span style="color: #008b8b;">:d</span> 99}<span style="color: #8c8c8c;">)</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">map-with-new-value-of-d</span> <span style="color: #8c8c8c;">(</span>put-key-d map-with-old-value-of-d 123<span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Using the getter on the updated map will return the new value of :d</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 123 get-key-d map-with-new-value-of-d<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+123
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The old map is of course unchanged</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 99 get-key-d map-with-old-value-of-d<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+99
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-7" class="outline-2">
+<h2 id="sec-7"><span class="section-number-2">7</span> Using a telltale to aid diagnosis of assertion errors</h2>
+<div class="outline-text-2" id="text-7">
+<p>
+Errors generated by Clojure's [:pre and :post assertions][<i>FogusBlogClojurePreAndPost</i>] 
+are of type <b>AssertionError</b>.
+</p>
+
+<p>
+Although they produce a (Java) stack track and precisely specify the
+assertion causing the error, they do not provide any information to
+identify the context  of the error i.e. which key suffered the error?
+</p>
+
+<p>
+As an aid to providing some context and help identify the
+cause of the error, you can provide an optional <span class="underline">telltale</span> parameter to the
+accessor function definition.  The <span class="underline">telltale</span> is a description (string) to be printed
+if/when an <b>AssertionError</b> occurs.
+</p>
+</div>
+
+<div id="outline-container-sec-7-1" class="outline-3">
+<h3 id="sec-7-1"><span class="section-number-3">7.1</span> Example - a getter with a telltale</h3>
+<div class="outline-text-3" id="text-7-1">
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a getter with a telltale</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-d</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:d</span> <span style="color: #008b8b;">:number</span> default 42 telltale <span style="color: #8b2252;">"The value of key :d was not a number"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The call to get-key-d below will fail with an asertion error</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-d {<span style="color: #008b8b;">:d</span> <span style="color: #8b2252;">"value of d must be a string else will fail"</span>}<span style="color: #8c8c8c;">)</span> 
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;  will fail with message something like:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:d "value of d must be a string else will fail"}&lt; REASON The value of key :d was not a number</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-7-2" class="outline-3">
+<h3 id="sec-7-2"><span class="section-number-3">7.2</span> Example - a putter with a telltale</h3>
+<div class="outline-text-3" id="text-7-2">
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a putter with a telltale</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">put-key-e</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-put-accessor</span> <span style="color: #0000ff;">:e</span> <span style="color: #008b8b;">:string</span> telltale <span style="color: #8b2252;">"The new value of key :e was not a string"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The call to put-key-e below will fail with an asertion error</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail put-key-e {<span style="color: #008b8b;">:e</span> <span style="color: #8b2252;">":e is always a string"</span>} 123<span style="color: #8c8c8c;">)</span> 
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;  will fail with message something like:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:d ":e is always a string"}&lt; REASON The new value of key :e was not a string</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-8" class="outline-2">
+<h2 id="sec-8"><span class="section-number-2">8</span> Contracts for Keys with multiple constraints</h2>
+<div class="outline-text-2" id="text-8">
+<p>
+In  the examples so far the contract (constraints)  applied to the value of a
+key has been simple - e.g. just a number or string.
+</p>
+
+<p>
+In fact, contracts  can be far "richer": You can use anything supported by
+[clojure-contracts-sugar][ClojureContractsSugarGithub].  
+</p>
+
+<p>
+Rich contracts were illustrated in my 
+[contracts sugar post][RumfordBlogClojureContractsSugar] and allow one or more 
+constraints to be applied to the key's value.  
+</p>
+
+<p>
+Multiple constraints can be specified in the definition of the accessor simply as a vector of the individual constraints.
+</p>
+
+<p>
+Or you can use <span class="underline">mnemonics</span> to "package" rich, complex contracts with multiple constraints,
+again as described in the [sugar post][RumfordBlogClojureContractsSugar].
+</p>
+
+<p>
+Some examples should help flesh this out.
+</p>
+</div>
+
+<div id="outline-container-sec-8-1" class="outline-3">
+<h3 id="sec-8-1"><span class="section-number-3">8.1</span> Example - a getter for a positive numeric key value</h3>
+<div class="outline-text-3" id="text-8-1">
+<p>
+To ensure a key's value is a positive number, the contract's vector of
+constraints would be:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">[<span style="color: #008b8b;">:number</span> <span style="color: #008b8b;">:pos</span>]
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a getter for a positive numeric key value</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-m</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:m</span> [<span style="color: #008b8b;">:number</span> <span style="color: #008b8b;">:pos</span>] telltale <span style="color: #8b2252;">":m must be a positive number"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This works</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 3 get-key-m {<span style="color: #008b8b;">:m</span> 3}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+3
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But this will fail</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-m {<span style="color: #008b8b;">:m</span> -3}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt; And should produce a message like:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:m -3}&lt; KEY :m REASON :m must be a positive number</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-8-2" class="outline-3">
+<h3 id="sec-8-2"><span class="section-number-3">8.2</span> Example - a getter to ensure a key's value is a map with keyword keys and numeric values</h3>
+<div class="outline-text-3" id="text-8-2">
+<p>
+Using an example based on one in the [sugar
+post][RumfordBlogClojureContractsSugar], this one needs to ensure a key's new value is a map, and its keys are be keywords and
+the values numbers. The contract would be:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">[<span style="color: #008b8b;">:map</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> keyword? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">keys</span> arg0<span style="color: #8c8c8c;">))</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span>]
+</pre>
+</div>
+
+<p>
+Note the key's value is available for use explicitly in the contract
+as <span class="underline">arg0</span> - see the [sugar post][RumfordBlogClojureContractsSugar] for
+an explanation of the use of <span class="underline">relative</span> argument names such as <span class="underline">arg0</span>.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a getter to ensure a key's value is a map with keyword keys and numeric values</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Note the constraint form uses arg0 to refer to the passed map</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-n</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:n</span> [<span style="color: #008b8b;">:map</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> keyword? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">keys</span> arg0<span style="color: #8c8c8c;">))</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span>] telltale <span style="color: #8b2252;">":n must be a map with keywords keys and numeric values"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This works</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3} get-key-n {<span style="color: #008b8b;">:n</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But this will fail</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-n {<span style="color: #008b8b;">:n</span> {<span style="color: #8b2252;">"x"</span> 1 <span style="color: #8b2252;">"y"</span> 2 <span style="color: #8b2252;">"z"</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt; And should produce a message like:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:n {"x" 1, "y" 2, "z" 3}}&lt; KEY :n REASON :n must be a map with keywords keys and numeric values</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-8-3" class="outline-3">
+<h3 id="sec-8-3"><span class="section-number-3">8.3</span> Example - a getter with a custom predicate</h3>
+<div class="outline-text-3" id="text-8-3">
+<p>
+You can define your own predicate functions, not just use
+[Clojure's][ClojureHome] "built-ins" (e.g. <span class="underline">map?</span>, <span class="underline">number?</span>,
+<span class="underline">string?</span>, etc). For example, a predicate function to ensure the value is a map with
+keywords keys and numeric values would be
+something like this:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a custom predicate to ensure a map's keys are keywords and values are numeric</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">is-map-with-keyword-keys-and-numeric-values?</span>
+  [source-map]
+  {<span style="color: #008b8b;">:pre</span> [<span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">map?</span> source-map<span style="color: #8c8c8c;">)</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> keyword? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">keys</span> source-map<span style="color: #8c8c8c;">))</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> source-map<span style="color: #8c8c8c;">))</span>]}
+  source-map<span style="color: #8c8c8c;">)</span>
+</pre>
+</div>
+
+<p>
+The custom predicate can be used in the accessor definition just like
+a "built-in":
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a rich getter using a custom predicate</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-p</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:p</span> is-map-with-keyword-keys-and-numeric-values?  telltale <span style="color: #8b2252;">":p failed predicate is-map-with-keyword-keys-and-numeric-values?"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This works</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3} get-key-p {<span style="color: #008b8b;">:p</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But this will fail</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-p {<span style="color: #008b8b;">:p</span> {<span style="color: #8b2252;">"x"</span> 1 <span style="color: #8b2252;">"y"</span> 2 <span style="color: #8b2252;">"z"</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt; And should produce a message like:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:p {"x" 1, "y" 2, "z" 3}}&lt; KEY :p REASON :p failed predicate is-map-with-keyword-keys-and-numeric-values?</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-8-4" class="outline-3">
+<h3 id="sec-8-4"><span class="section-number-3">8.4</span> Example - a getter with a custom mnemonic for the key</h3>
+<div class="outline-text-3" id="text-8-4">
+<p>
+<span class="underline">Mnemonics</span> are a feature of
+[clojure-contracts-sugar][GithubClojureContractsSugar] for defining,
+re-using and composing contracts, usually with multiple constraints.
+</p>
+
+<p>
+This example again is based loosely on one in my [sugar
+post][RumfordBlogClojureContractsSugar] - where you can read all about
+<span class="underline">mnemonics</span> - and demonstrates how to implement the
+<span class="underline">is-map-with-keyword-keys-and-numeric-values?</span> predicate function
+using a mnemonic.
+</p>
+
+<blockquote>
+<p>
+Note the example uses the <b>sugar</b> macro <span class="underline">define-mnemonics</span> to simplify the
+definition of a symmetric (i.e. <span class="underline">suck</span> and <span class="underline">spit</span>) contract suitable
+for use in the definition of both a getter (spit) <b>and</b> putter (suck).
+</p>
+</blockquote>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Define a custom mnemonic map-special ensuring a map with keyword keys and numeric values.</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Note the mnemonic is suitable for a both a getter and putter i.e it has the same *suck* and *spit* constraints</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-mnemonics</span>
+  <span style="color: #0000ff;">key-mnemonics</span> {<span style="color: #008b8b;">:key-value-is-a-map-with-numeric-values</span> [map? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span>]}<span style="color: #8c8c8c;">)</span>
+</pre>
+</div>
+
+<p>
+The example:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a getter with a custom mnemonic for the key</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Use the :key-value-is-a-map-with-numeric-values mnemonic for the key contract </span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">to ensure the key's value is a map with numeric values.</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-q</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:q</span> <span style="color: #008b8b;">:key-value-is-a-map-with-numeric-values</span> telltale <span style="color: #8b2252;">":q failed contract key-value-is-a-map-with-numeric-values"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This works</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3} get-key-q {<span style="color: #008b8b;">:q</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But this will fail</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-q {<span style="color: #008b8b;">:q</span> {<span style="color: #008b8b;">:a</span> <span style="color: #008b8b;">:one</span> <span style="color: #008b8b;">:b</span> <span style="color: #008b8b;">:two</span> <span style="color: #008b8b;">:c</span> <span style="color: #008b8b;">:three</span>}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt; And should produce a message like:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:q {:a :one :b :two :c :three}}&lt; KEY :q REASON :q failed contract key-value-is-a-map-with-numeric-values</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-9" class="outline-2">
+<h2 id="sec-9"><span class="section-number-2">9</span> Contracts for the Map</h2>
+<div class="outline-text-2" id="text-9">
+<p>
+So far, I've not said anything about the map argument itself, or
+whether a contract (constraints) is applied to it.
+</p>
+
+<p>
+In fact, behind the scenes, a contract <b>is</b>  applied automatically to
+the map but its minimal: just <span class="underline">map?</span>
+</p>
+
+<p>
+But the default contract for the map  can be overidden using the
+<span class="underline">map-contract</span> parameter on the call to e.g.
+<span class="underline">define-map-get-accessor</span>.
+</p>
+
+<p>
+Just like contracts for a key, map contracts can be anything
+supported by [clojure-contracts-sugar][GithubClojureContractsSugar],
+especially mnemonics.
+</p>
+</div>
+
+<div id="outline-container-sec-9-1" class="outline-3">
+<h3 id="sec-9-1"><span class="section-number-3">9.1</span> Example - applying a contract to the map itself</h3>
+<div class="outline-text-3" id="text-9-1">
+<p>
+In the example below the <span class="underline">sugar</span> macro <span class="underline">define-mnemonics</span>
+defines a contract suitable for the map argument (specifically a
+<span class="underline">suck-only</span> contract).
+</p>
+
+<p>
+It also defines a key mnemonic to ensure the key's value is a map with
+positive numeric values.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - applying a contract to the map itself</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Define the mnemonics</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-mnemonics</span>
+  <span style="color: #0000ff;">map-mnemonics</span> {<span style="color: #008b8b;">:map-with-keyword-keys</span> [map? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> keyword? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">keys</span> arg0<span style="color: #8c8c8c;">))</span>]}
+
+  key-mnemonics {<span style="color: #008b8b;">:key-is-a-map-with-positive-numeric-values</span> [map? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> pos? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span>] }<span style="color: #8c8c8c;">)</span> 
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Use both contracts</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-q</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:q</span> <span style="color: #008b8b;">:key-is-a-map-with-positive-numeric-values</span> 
+                 map-contract <span style="color: #008b8b;">:map-with-keyword-keys</span> telltale <span style="color: #8b2252;">":q failed key contract key-is-a-map-with-positive-numeric-values or map contract map-with-keyword-keys"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This works</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3} get-key-q {<span style="color: #008b8b;">:q</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But this will fail as the value of :a is -1</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-q {<span style="color: #008b8b;">:q</span> {<span style="color: #008b8b;">:a</span> -1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt; And should produce a message like:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:q {:a -1 :b 2 :c 3}}}&lt; KEY :q REASON :q failed key contract :key-is-a-map-with-positive-numeric-values or map contract map-with-keyword-keys</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-10" class="outline-2">
+<h2 id="sec-10"><span class="section-number-2">10</span> Using Transformation Functions (mappers)</h2>
+<div class="outline-text-2" id="text-10">
+</div><div id="outline-container-sec-10-1" class="outline-3">
+<h3 id="sec-10-1"><span class="section-number-3">10.1</span> Example - putters with mappers</h3>
+<div class="outline-text-3" id="text-10-1">
+<p>
+Sometimes its useful to be also to transform - <span class="underline">map</span> - the (new) value of a key
+before <span class="underline">putting</span> into the map.  For example to <span class="underline">normalise</span> the value in
+some way (e.g. - trivially - string-ify and lower case).
+</p>
+
+<p>
+Note the key's contract is applied to the <b>transformed</b> value.
+</p>
+
+<p>
+To provide a transformation function, use the <span class="underline">mapper</span> parameter on
+the call to <span class="underline">define-map-putter</span>.  Your can specify more than one
+mapper - just provide a vector of functions.  Multiple mappers are
+applied in the same order as <span class="underline">comp</span> i..e rightmost first.
+</p>
+
+<p>
+The example has a mapper that just converts the argument into a string
+and counts the number of characters.  (Note the stringified keyword
+includes the leading colon.)
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - putters with mappers</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">put-key-f</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-put-accessor</span> <span style="color: #0000ff;">:f</span> <span style="color: #008b8b;">:number</span>  mapper (fn [s] <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">count</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">str</span> s<span style="color: #8c8c8c;">)))</span> telltale <span style="color: #8b2252;">":f must be a number"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">These will work</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:f</span> 6} put-key-f {} <span style="color: #8b2252;">"6chars"</span><span style="color: #8c8c8c;">)</span>
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:f</span> 7} put-key-f {} <span style="color: #008b8b;">:7chars</span><span style="color: #8c8c8c;">)</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-10-2" class="outline-3">
+<h3 id="sec-10-2"><span class="section-number-3">10.2</span> Example - getters with mappers</h3>
+<div class="outline-text-3" id="text-10-2">
+<p>
+In a similar vein, for a <span class="underline">getter</span>, there may be times when it is
+useful to transform the key's value  <b>before</b> it is returned.
+</p>
+
+<p>
+For example, defining additional <span class="underline">getters</span> for the same key that holds
+a map to return <span class="underline">views</span> of the value e.g. just the keys, just the
+values, the sum of the values, whatever. Or, perhaps, create a
+derivative value e.g. instantiate a Java class instance.
+</p>
+
+<p>
+When using a <span class="underline">mapper</span> with a <span class="underline">getter</span>, the contract (e.g. :number)
+is applied to the <b>transformed</b> value, not the value itself
+(e.g. :map). (You could apply a contract to the
+key's actual value using the map contract.)
+</p>
+
+<p>
+Note in the example below a key mnemonic is applied to the map.  This
+is ok; only the <span class="underline">suck</span> constraints in the key mnemonic will be
+applied to the map.
+</p>
+
+<p>
+The example also shows how mnemonics can be <b>composed</b> - see the
+[sugar post][RumfordBlogClojureContractsSugar] for details. Composed
+mnemonics in the call to <span class="underline">define-mnemonics</span> are:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #008b8b;">:key-is-a-map-with-keyword-keys-and-postive-numeric-values</span> [<span style="color: #008b8b;">:map-with-keyword-keys</span> <span style="color: #008b8b;">:map-with-positive-numeric-values</span>]
+</pre>
+</div>
+
+<p>
+and
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #008b8b;">:collection-of-positive-numeric-values</span> [<span style="color: #008b8b;">:collection-of-numeric-values</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> pos? arg0<span style="color: #8c8c8c;">)</span>]
+</pre>
+</div>
+
+<p>
+The example:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - getters with mappers</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Define some mnemonics. Note a key contract mnemonic is applied to the</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">map. Also mnemonics are composed</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-mnemonics</span>
+  <span style="color: #0000ff;">key-mnemonics</span> {<span style="color: #008b8b;">:map-with-keyword-keys</span> [map? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> keyword? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">keys</span> arg0<span style="color: #8c8c8c;">))</span>]
+
+                 <span style="color: #008b8b;">:map-with-positive-numeric-values</span> [map? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> pos? <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> arg0<span style="color: #8c8c8c;">))</span>]
+
+                 <span style="color: #008b8b;">:key-is-a-map-with-keyword-keys-and-postive-numeric-values</span> [<span style="color: #008b8b;">:map-with-keyword-keys</span> <span style="color: #008b8b;">:map-with-positive-numeric-values</span>]
+
+                 <span style="color: #008b8b;">:collection-of-keywords</span> [<span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">coll?</span> arg0<span style="color: #8c8c8c;">)</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> keyword? arg0<span style="color: #8c8c8c;">)</span>]
+
+                 <span style="color: #008b8b;">:collection-of-numeric-values</span> [<span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">coll?</span> arg0<span style="color: #8c8c8c;">)</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> number? arg0<span style="color: #8c8c8c;">)</span>]
+
+                 <span style="color: #008b8b;">:collection-of-positive-numeric-values</span> [<span style="color: #008b8b;">:collection-of-numeric-values</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">every?</span> pos? arg0<span style="color: #8c8c8c;">)</span>]}<span style="color: #8c8c8c;">)</span>
+
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-g</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:g</span>
+                 <span style="color: #008b8b;">:key-is-a-map-with-keyword-keys-and-postive-numeric-values</span>
+                 map-contract <span style="color: #008b8b;">:map-with-keyword-keys</span> telltale <span style="color: #8b2252;">":g must be a map with keyword keys and postivie values"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Define extra getters for the keys and values of :g's map,</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">both of which must be collections (coll?) of keywords or positive</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">numeric values</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-g-keys</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:g</span> <span style="color: #008b8b;">:collection-of-keywords</span>
+                      map-contract <span style="color: #008b8b;">:map-with-keyword-keys</span> mapper (fn [m] <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">keys</span> m<span style="color: #8c8c8c;">))</span> telltale <span style="color: #8b2252;">":g keys must be a collection"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-g-vals</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:g</span> <span style="color: #008b8b;">:collection-of-positive-numeric-values</span>
+                      map-contract <span style="color: #008b8b;">:map-with-keyword-keys</span> mapper (fn [m] <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> m<span style="color: #8c8c8c;">))</span> telltale <span style="color: #8b2252;">":g values must be a collection"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Test data</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">test-map1</span> {<span style="color: #008b8b;">:g</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">test-map1-g-keys</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">keys</span> <span style="color: #8c8c8c;">(</span><span style="color: #008b8b;">:g</span> test-map1<span style="color: #8c8c8c;">)))</span>
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">test-map1-g-vals</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> <span style="color: #8c8c8c;">(</span><span style="color: #008b8b;">:g</span> test-map1<span style="color: #8c8c8c;">)))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Test the keys</span>
+
+<span style="color: #8c8c8c;">(</span>will-work test-map1-g-keys get-key-g-keys test-map1<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+'<span style="color: #8c8c8c;">(</span><span style="color: #008b8b;">:a</span> <span style="color: #008b8b;">:c</span> <span style="color: #008b8b;">:b</span><span style="color: #8c8c8c;">)</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Test the values</span>
+
+<span style="color: #8c8c8c;">(</span>will-work test-map1-g-vals get-key-g-vals test-map1<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+'<span style="color: #8c8c8c;">(</span>1 3 2<span style="color: #8c8c8c;">)</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Another getter to sum the values</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-g-sum-vals</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:g</span> <span style="color: #008b8b;">:number</span> mapper (fn [m] <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">apply</span> + <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">vals</span> m<span style="color: #8c8c8c;">)))</span> telltale <span style="color: #8b2252;">":g values sum must be a number"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 6 get-key-g-sum-vals test-map1<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+6
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-11" class="outline-2">
+<h2 id="sec-11"><span class="section-number-2">11</span> Using a Monitor</h2>
+<div class="outline-text-2" id="text-11">
+<p>
+A monitor provides a <span class="underline">hook</span> to call an arbitrary function in an accessor.
+The result of a monitor is ignored.  Monitors can be used for any
+purpose e.g. logging, diagnostics, communications with other
+processes, whatever.
+</p>
+
+<p>
+A monitor is specified using the <span class="underline">monitor</span> parameter.
+</p>
+</div>
+
+<div id="outline-container-sec-11-1" class="outline-3">
+<h3 id="sec-11-1"><span class="section-number-3">11.1</span> Example - a getter with a monitor</h3>
+<div class="outline-text-3" id="text-11-1">
+<p>
+If provided, the monitor function in a getter is called with at least the following arguments:
+</p>
+
+<ol class="org-ol">
+<li>the key name;
+</li>
+
+<li>the key value (transformed if required); and 
+</li>
+
+<li>the original (argument) map.
+</li>
+</ol>
+
+<p>
+You can, optionally, add your own additional arguments using the
+<span class="underline">monitor-args</span> parameter, and these are passed "as-is"
+to the monitor function after the other arguments.  The <span class="underline">monitor-args</span> should
+be a vector.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a getter with a monitor</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This is the monitor function</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">monitor-get-key-j</span>
+  [key-name key-value arg-map &amp; opt-args]
+  <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"monitor-get-key-j"</span> <span style="color: #8b2252;">"key-name"</span> key-name <span style="color: #8b2252;">"key-value"</span> key-value <span style="color: #8b2252;">"arg-map"</span> arg-map <span style="color: #8b2252;">"opt-args"</span> <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">count</span> opt-args<span style="color: #8c8c8c;">)</span> opt-args<span style="color: #8c8c8c;">))</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-j</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:j</span> <span style="color: #008b8b;">:number</span> monitor monitor-get-key-j monitor-args [<span style="color: #8b2252;">"opt arg1"</span> 2 <span style="color: #008b8b;">:three</span>]<span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The getter works as usual</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 456 get-key-j {<span style="color: #008b8b;">:j</span> 456}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+456
+<span style="color: #006400;">;; </span><span style="color: #006400;">And should display the monitor message:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">monitor-get-key-j key-name :j key-value 456 arg-map {:j 456} opt-args 3 (opt-arg1 2 :three)</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-11-2" class="outline-3">
+<h3 id="sec-11-2"><span class="section-number-3">11.2</span> Example - a putter with a monitor</h3>
+<div class="outline-text-3" id="text-11-2">
+<p>
+If provided, a putter's monitor function is called always with the following arguments:
+</p>
+
+<ol class="org-ol">
+<li>the key name;
+</li>
+
+<li>the key value (transformed if require); 
+</li>
+
+<li>the original (argument) map; and 
+</li>
+
+<li>the new (updated) map.
+</li>
+</ol>
+
+<p>
+As with a getter, and optionally, you pass your own additional arguments using the
+<span class="underline">monitor-args</span> parameter.  
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - a putter with a monitor</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This is the monitor function</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">monitor-put-key-k</span>
+  [key-name key-value arg-map new-map]
+  <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"monitor-put-key-k"</span> <span style="color: #8b2252;">"key-name"</span> key-name <span style="color: #8b2252;">"key-value"</span> key-value <span style="color: #8b2252;">"arg-map"</span> arg-map <span style="color: #8b2252;">"new-map"</span> new-map<span style="color: #8c8c8c;">))</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">put-key-k</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-put-accessor</span> <span style="color: #0000ff;">:k</span> <span style="color: #008b8b;">:string</span> monitor monitor-put-key-k<span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The putter works as usual</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:k</span> <span style="color: #8b2252;">"new value of key :k"</span>} put-key-k {<span style="color: #008b8b;">:k</span> <span style="color: #8b2252;">"old value of key :k"</span>} <span style="color: #8b2252;">"new value of key :k"</span><span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:k</span> <span style="color: #8b2252;">"new value of key :k"</span>}
+<span style="color: #006400;">;; </span><span style="color: #006400;">And should produce message like:</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">monitor-put-key-k key-name :j key-value 456 arg-map {:k "old value of key :k"} new-map {:k "new value of key :k"}</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-12" class="outline-2">
+<h2 id="sec-12"><span class="section-number-2">12</span> Multi-Level Keys</h2>
+<div class="outline-text-2" id="text-12">
+<p>
+You can also define accessors with multilevel keys and use (define) them in an equivalent way as when using
+<span class="underline">get-in</span> and <span class="underline">assoc-in</span> directly by providing a vector containing the
+key hierarchy in a call to e.g. <span class="underline">define-map_get_accessor</span>.
+</p>
+</div>
+
+<div id="outline-container-sec-12-0-1" class="outline-4">
+<h4 id="sec-12-0-1"><span class="section-number-4">12.0.1</span> Example - Explicit Multi-Level Getters</h4>
+<div class="outline-text-4" id="text-12-0-1">
+<p>
+In these getter examples the value of multilevel key <span class="underline">[:a :b :c]</span> must be a string:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - Explicit Multi-Level Getters</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This example shows how to define a getter function that ensures the</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">returned value of multi-level key [:a :b :c] is a string. It also supplies a</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">static default.</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-abc</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> [<span style="color: #008b8b;">:a</span> <span style="color: #008b8b;">:b</span> <span style="color: #008b8b;">:c</span>] <span style="color: #008b8b;">:string</span> default <span style="color: #8b2252;">"static default for multilevel key [:a :b :c]"</span> telltale <span style="color: #8b2252;">"The value of multilevel key [:a :b :c] must be a string"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #8c8c8c;">(</span>will-work <span style="color: #8b2252;">"value for multilevel key [:a :b :c]"</span> get-key-abc {<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> {<span style="color: #008b8b;">:d</span> 4 <span style="color: #008b8b;">:c</span> <span style="color: #8b2252;">"value for multilevel key [:a :b :c]"</span>}}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+<span style="color: #8b2252;">"value for multilevel key [:a :b :c]"</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The below will fail as [:a :b :c] is not a string</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-abc {<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> {<span style="color: #008b8b;">:d</span> <span style="color: #8b2252;">"value of [:a :b :d]"</span> <span style="color: #008b8b;">:c</span> 99}}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt; message something like</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:a {:b 99}}&lt; KEY :a :b REASON The value of multilevel key [:a :b :c] must be a string</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Static Defaults work as expected</span>
+<span style="color: #8c8c8c;">(</span>will-work <span style="color: #8b2252;">"static default for multilevel key [:a :b :c]"</span> get-key-abc {}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+<span style="color: #8b2252;">"static default for multilevel key [:a :b :c]"</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Dynnamic Defaults work as expected</span>
+<span style="color: #8c8c8c;">(</span>will-work <span style="color: #8b2252;">"dynamic default for multilevel key [:a :b :c]"</span> get-key-abc {} <span style="color: #8b2252;">"dynamic default for multilevel key [:a :b :c]"</span><span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+<span style="color: #8b2252;">"dynamic default for multilevel key [:a :b :c]"</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This will also work because, although the map does not have enough levels, the static default will be returned</span>
+
+<span style="color: #8c8c8c;">(</span>will-work <span style="color: #8b2252;">"static default for multilevel key [:a :b :c]"</span> get-key-abc {<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> <span style="color: #8b2252;">"value of b is not a map so key c can not exist"</span>}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+<span style="color: #8b2252;">"static default for multilevel key [:a :b :c]"</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-12-0-2" class="outline-4">
+<h4 id="sec-12-0-2"><span class="section-number-4">12.0.2</span> Example - Explicit Multi-Level Putters</h4>
+<div class="outline-text-4" id="text-12-0-2">
+<p>
+Multilevel putters works equivalently.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - Explicit Multi-Level Putters</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This example shows how to define a putter function for the string multilevel key [:a :b]:</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">put-key-ab</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-put-accessor</span> [<span style="color: #008b8b;">:a</span> <span style="color: #008b8b;">:b</span>] <span style="color: #008b8b;">:string</span> telltale <span style="color: #8b2252;">"The value of multilevel key [:a :b] must be a string"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> <span style="color: #8b2252;">"cd"</span>}}  put-key-ab {<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> <span style="color: #8b2252;">"ab"</span>}} <span style="color: #8b2252;">"cd"</span><span style="color: #8c8c8c;">)</span> 
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> <span style="color: #8b2252;">"cd"</span>}}
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The below will fail as [:a :b] is not a string</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail put-key-ab {<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> <span style="color: #8b2252;">"ab"</span>}} 99<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt; message something like</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">Contract Failure Value &gt;class clojure.lang.PersistentArrayMap&lt; &gt;{:a {:b "ab"}}&lt; KEY :a :b REASON The value of multilevel key [:a :b] must be a string</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-13" class="outline-2">
+<h2 id="sec-13"><span class="section-number-2">13</span> Composing Multi-Level Accessors</h2>
+<div class="outline-text-2" id="text-13">
+<p>
+You might find it useful to be able to <b>compose</b> an (new) accessor
+using an existing accessor.
+</p>
+
+<p>
+For example you may want to define a "leaf" accessor for a key at the
+lowest level and then compose the leaf accessor with keys from the
+other, higher levels.  The point being that if the leaf key is used in more
+than one multilevel map, the leaf accessor only has to be defined
+once.
+</p>
+
+<p>
+Your can also e.g. use a mapper with a composed accessor and enforce a different contract on the
+mapped (derived) key value.  In the example below the composed accessor
+<span class="underline">get-key-z-from-pq</span> defines a mapper to count the characters in the
+expected string and applies a <span class="underline">:number</span> contract to the mapped value.
+The leaf accessor <span class="underline">get-key-z</span> ensures the value fed into
+the mapper is a <span class="underline">:string</span>. (Note you can't use a dynamic default in
+this case because the <span class="underline">:number</span> contract will fail a <span class="underline">:string</span>
+supplied as the dynamic default.)
+</p>
+</div>
+
+<div id="outline-container-sec-13-0-1" class="outline-4">
+<h4 id="sec-13-0-1"><span class="section-number-4">13.0.1</span> Example - composing a getter</h4>
+<div class="outline-text-4" id="text-13-0-1">
+<p>
+In this example the leaf accessor is for key <span class="underline">:z</span>.  
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - composing a getter</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Define the leaf accessor for key :z</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-z</span> <span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-get-accessor</span> <span style="color: #0000ff;">:z</span> <span style="color: #008b8b;">:string</span> default <span style="color: #8b2252;">"static default for key :z"</span> telltale <span style="color: #8b2252;">"The value of :z must be a string"</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Compose the leaf with a keys [:a :b]</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-z-from-ab</span> <span style="color: #8c8c8c;">(</span>compose-map-get-accessor [<span style="color: #008b8b;">:a</span> <span style="color: #008b8b;">:b</span>] get-key-z<span style="color: #8c8c8c;">))</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This will work</span>
+
+<span style="color: #8c8c8c;">(</span>will-work <span style="color: #8b2252;">"multilevel key [:a :b :z] value"</span> get-key-z-from-ab {<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> {<span style="color: #008b8b;">:d</span> 4 <span style="color: #008b8b;">:z</span> <span style="color: #8b2252;">"multilevel key [:a :b :z] value"</span>}}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+<span style="color: #8b2252;">"multilevel key [:a :b :z] value"</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The below will fail as [:a :b :z] is not a string</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-key-z-from-ab {<span style="color: #008b8b;">:a</span> {<span style="color: #008b8b;">:b</span> {<span style="color: #008b8b;">:d</span> <span style="color: #8b2252;">"value of [:a :b :d]"</span> <span style="color: #008b8b;">:z</span> 99}}}<span style="color: #8c8c8c;">)</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Defaults are hierachical and the "leafiest" one wins</span>
+
+<span style="color: #8c8c8c;">(</span>will-work <span style="color: #8b2252;">"static default for key :z"</span> get-key-z-from-ab {}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+<span style="color: #8b2252;">"static default for key :z"</span>
+
+<span style="color: #8c8c8c;">(</span>will-work <span style="color: #8b2252;">"dynamic default for key :z"</span> get-key-z-from-ab {} <span style="color: #8b2252;">"dynamic default for key :z"</span><span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+<span style="color: #8b2252;">"dynamic default for key :z"</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Compose the leaf with keys [:p :q] *and* use a mapper to return a number</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get-key-z-from-pq</span> <span style="color: #8c8c8c;">(</span>compose-map-get-accessor [<span style="color: #008b8b;">:p</span> <span style="color: #008b8b;">:q</span>] get-key-z  mapper (fn [x] <span style="color: #8c8c8c;">(</span><span style="color: #483d8b;">count</span> x<span style="color: #8c8c8c;">))</span> key-contract <span style="color: #008b8b;">:number</span><span style="color: #8c8c8c;">))</span>
+
+<span style="color: #8c8c8c;">(</span>will-work 20 get-key-z-from-pq {<span style="color: #008b8b;">:p</span> {<span style="color: #008b8b;">:q</span> {<span style="color: #008b8b;">:z</span> <span style="color: #8b2252;">"a string of 20 chars"</span>}}} <span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+20
+</pre>
+</div>
+
+<p>
+Finally, there is no actual restriction on leaf accessors being for just one level; they can
+be multilevel.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-14" class="outline-2">
+<h2 id="sec-14"><span class="section-number-2">14</span> Defining both putter and getter</h2>
+<div class="outline-text-2" id="text-14">
+<p>
+The definitions of a getter and putter for the same key share common
+arguments and its likely both accessors would be required. As a
+convenience, you can define both the putter and getter in one call
+to the <span class="underline">define-map-accessors</span> macro.
+</p>
+
+<p>
+The base name of the accessors can be supplied using the optional
+<span class="underline">name</span> argument and the getter and putter names are generated from it.
+For example if <span class="underline">name</span> is <span class="underline">the-v-key</span> then the putter name will be
+<span class="underline">put-the-v-key</span> and the getter <span class="underline">get-the-v-key</span>. The value of <span class="underline">name</span>
+can be anything, it is "stringified" (using <span class="underline">str</span>) as necessary.
+</p>
+
+<p>
+Alternatively, you can explicitly specify the names of each accessor
+using the <span class="underline">get-name</span> and <span class="underline">put-name</span> parameters respectively.  These
+take priority over <span class="underline">name</span>.
+</p>
+
+<p>
+If no <span class="underline">name</span>, <span class="underline">get-name</span> or <span class="underline">put-name</span> parameters are provided, the
+name will be derived from the name of the key. So if the key's name is
+<span class="underline">:x</span>, the accessors will be <span class="underline">get-x</span> and <span class="underline">put-x</span>.
+</p>
+
+<p>
+Other, accessor-specific parameters can be provided using the regular
+parameter (e.g. <span class="underline">telltale</span>  <span class="underline">monitor</span> <span class="underline">mapper</span> etc) prefixed by <span class="underline">get-</span> or <span class="underline">put-</span>.
+</p>
+</div>
+
+<div id="outline-container-sec-14-0-1" class="outline-4">
+<h4 id="sec-14-0-1"><span class="section-number-4">14.0.1</span> Example - defining both accessors together</h4>
+<div class="outline-text-4" id="text-14-0-1">
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - defining both accessors together</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">The base name of the accessors has been provided: "the-v-key"</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-accessors</span> <span style="color: #0000ff;">:v</span> is-map-with-keyword-keys-and-numeric-values? name the-v-key telltale <span style="color: #8b2252;">":p failed predicate is-map-with-keyword-keys-and-numeric-values?"</span><span style="color: #8c8c8c;">)</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This getter will work</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3} get-the-v-key {<span style="color: #008b8b;">:v</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But this will fail as expected</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-the-v-key {<span style="color: #008b8b;">:v</span> {<span style="color: #8b2252;">"x"</span> 1 <span style="color: #8b2252;">"y"</span> 2 <span style="color: #8b2252;">"z"</span> 3}}<span style="color: #8c8c8c;">)</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This putter will work</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:v</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}} put-the-v-key {} {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:v</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-14-0-2" class="outline-4">
+<h4 id="sec-14-0-2"><span class="section-number-4">14.0.2</span> Example - defining both accessors using the key's name to name the accessors</h4>
+<div class="outline-text-4" id="text-14-0-2">
+<div class="org-src-container">
+
+<pre class="src src-clojure"><span style="color: #006400;">;; </span><span style="color: #006400;">Example - defining both accessors using the key's name to name the accessors</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">Note since no name parameters have been provided, the getter and</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">putter will derived from the key's name and be called get-x and put-x respectively.</span>
+
+<span style="color: #8c8c8c;">(</span><span style="color: #a020f0;">define-map-accessors</span> <span style="color: #0000ff;">:x</span> is-map-with-keyword-keys-and-numeric-values?
+  get-telltale <span style="color: #8b2252;">"the value of :x or a default was not a map with keyword keys and numeric values"</span>
+  put-telltale <span style="color: #8b2252;">"the new value of :x must be a map with keyword keys and numeric values"</span>
+  <span style="color: #8c8c8c;">)</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This getter will work</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3} get-x {<span style="color: #008b8b;">:x</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">But this will fail as expected</span>
+
+<span style="color: #8c8c8c;">(</span>will-fail get-x {<span style="color: #008b8b;">:x</span> {<span style="color: #8b2252;">"x"</span> 1 <span style="color: #8b2252;">"y"</span> 2 <span style="color: #8b2252;">"z"</span> 3}}<span style="color: #8c8c8c;">)</span>
+
+<span style="color: #006400;">;; </span><span style="color: #006400;">This putter will work</span>
+
+<span style="color: #8c8c8c;">(</span>will-work {<span style="color: #008b8b;">:x</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}} put-x {} {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}<span style="color: #8c8c8c;">)</span>
+<span style="color: #006400;">;; </span><span style="color: #006400;">=&gt;</span>
+{<span style="color: #008b8b;">:x</span> {<span style="color: #008b8b;">:a</span> 1 <span style="color: #008b8b;">:b</span> 2 <span style="color: #008b8b;">:c</span> 3}}
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-15" class="outline-2">
+<h2 id="sec-15"><span class="section-number-2">15</span> Final Words</h2>
+<div class="outline-text-2" id="text-15">
+<p>
+[clojure-contracts-maps][ClojureMapAccessorsGithub] provides a useful
+additional feature layer sitting atop normal [Clojure][ClojureHome]
+maps.
+</p>
+
+<p>
+Using the library, its possible to apply Clojure's [:pre and :post
+conditions][FogusBlogClojurePreAndPost] to a map's key accesses in the
+same way as they can be applied to a function's arguments. The power
+of [clojure-contracts-sugar][ClojureContractsSugarGithub] (and
+implicitly [core.contracts][ClojureCoreContractsGithub]) allows for a
+very rich sets of constraints to be applied to a key's value.
+</p>
+
+<p>
+The opportunity to define the access "semantics" of a map's key via
+regular functions, ensuring the semantics are adhered to and/or applied
+consistently, is a useful and easy-to-use program-correctness aid.
+</p>
+
+<p>
+Using <span class="underline">mappers</span> with a <span class="underline">getter</span> provide a simple way of generating
+<span class="underline">views</span> of a key's value, without affecting the original value.
+Conversely,  <span class="underline">mappers</span> with a <span class="underline">putter</span> facilitate e.g <span class="underline">normalising</span> the
+key's (new) value before storing in the (updated) map.
+</p>
+
+<p>
+<span class="underline">Monitors</span> provide a simple way of adding arbitrary, but neutral
+non-affecting logic, to the key's access.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-16" class="outline-2">
+<h2 id="sec-16"><span class="section-number-2">16</span> Final, Final Words</h2>
+<div class="outline-text-2" id="text-16">
+<p>
+I've done a fair amount of Ruby meta programming.  An essential difference is
+[Clojure][ClojureHome] macros are compile-time whereas Ruby is
+run-time.
+</p>
+
+<p>
+But doing macro metaprogramming feels quite different:
+[Clojure][ClojureHome] works with values ([homoiconicity][HomoiconicityWikipedia])
+whereas Ruby metaprogramming works with text that is eval-ed.   
+</p>
+
+<p>
+One of the most noticeable different I've found though (maybe just my
+style) is whereas in Ruby you build the complete code-as-text but with
+macros you can take an iterative approach i.e a top level macro "call" lower
+level more-focused macros.
+</p>
+
+<p>
+There does seem to be a bit of a meme in the community along the lines of "If you are
+using a macro you are doing it wrong".  But, used wisely, macros are a
+fantastic (and sometimes essential) tool.
+</p>
+
+<p>
+But the objectives are the same whether Ruby or Clojure - removing boilerplate and getting
+to the heart of the problem rather than distracted by implementation details.
+</p>
+
+<pre class="example">
+[ClojureHome]: http:///clojure.org
+[JavaHome]: http://www.java.com
+[LeiningenHome]: http://leiningen.org/
+[LeiningenGithub]: https://github.com/technomancy/leiningen
+[MavenHome]: http://maven.apache.org/
+[ClojarsHome]: http://clojars.org
+[ClojarsClojureContractsMaps]: https://clojars.org/name.rumford/clojure-contracts-maps
+[ClojureCoreContractsGithub]: https://github.com/clojure/core.contracts
+[ClojureContractsSugarGithub]: https://github.com/ianrumford/clojure-contracts-sugar
+[ClojureMapAccessorsGithub]: https://github.com/ianrumford/clojure-contracts-maps
+[ClojureCoreContractsPostFirstTake]: http://ianrumford.github.io/blog/2012/11/17/first-take-on-contracts-in-clojure/
+[FogusBlogClojurePreAndPost]: http://blog.fogus.me/2009/12/21/clojures-pre-and-post/
+[EmerickHome]: http://cemerick.com/
+[GrandHome]: http://clj-me.cgrand.net/
+[CarperHome]: http://briancarper.net/
+[ClojureProgrammingBook]: http://www.clojurebook.com/
+[FogusHome]: http://blog.fogus.me
+[FogusTwitter]: https://twitter.com/fogus
+[CHouserHome]: http://old.n01se.net/chouser
+[BookJoC2ed]: http://www.manning.com/fogus2
+[RumfordBlogClojureContractsSugar]: http://ianrumford.github.io/blog/2014/02/19/a-little-sugar-with-your-clojure-aspect-contracts/
+[RumfordBlogClojureContractsFirstTake]: http://ianrumford.github.io/blog/2012/11/17/first-take-on-contracts-in-clojure/
+[emacshome]: http://www.gnu.org/software/emacs/
+[orgmodehome]: http://orgmode.org/
+[orgmodemanualextractsourcecode]: http://orgmode.org/org.html#Extracting-source-code
+[PerlisTuringAward]: http://amturing.acm.org/award_winners/perlis_0132439.cfm
+[HashWikipedia]: http://en.wikipedia.org/wiki/Hash_table
+[CormenBookIntroductionToAlgorithms]: http://www.amazon.co.uk/Introduction-Algorithms-Thomas-H-Cormen/dp/0262032937/ref=sr_1_1?s=books&amp;ie=UTF8&amp;qid=1392992028&amp;sr=1-1&amp;keywords=0262032937
+[CormenBookIntroductionToAlgorithmLuhn]: http://books.google.co.uk/books?id=NLngYyWFl_YC&amp;pg=PA252&amp;lpg=PA252&amp;dq=luhn+hash+tables&amp;source=bl&amp;ots=BxWoJG3mJa&amp;sig=cTpYRKlO-rNe8TDar3ko8bv4MQ8&amp;hl=en&amp;sa=X&amp;ei=0UIHU662DKap7Abp1IHgCA&amp;ved=0CFoQ6AEwBg#v=onepage&amp;q=luhn%20hash%20tables&amp;f=false
+[LuhnWikipedia]: http://en.wikipedia.org/wiki/Hans_Peter_Luhn
+[JavaWikiHashmap]: http://docs.oracle.com/javase/7/docs/api/java/util/HashMap.html
+[HigherOrderFunctionWikipedia]: http://en.wikipedia.org/wiki/Higher-order_function
+[Eiffel Design by Contract]: http://en.wikipedia.org/wiki/Eiffel_(programming_language)#Design_by_Contract
+[ClojureDocsAssert]: http://clojuredocs.org/clojure_core/clojure.core/assert
+[HomoiconicityWikipedia]: http://en.wikipedia.org/wiki/Homoiconicity
+</pre>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Ian Rumford</p>
+<p class="date">Created: 2014-03-19 Wed 17:52</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.3.1 (<a href="http://orgmode.org">Org</a> mode 8.2.5c)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
