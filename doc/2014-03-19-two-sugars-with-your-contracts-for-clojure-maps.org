@@ -8,14 +8,12 @@
 #+OCTOPRESS_CATEGORIES: clojure map aspect contract
 #+OCTOPRESS_COMMENTS: testing ox-md-octopress
 #+PROPERTY: :mkdirp yes
-
+#+BEGIN_QUOTE
+TL;DR: Using Getters and Putters with Contracts on Clojure Maps
+#+END_QUOTE
 * Introduction
 
-One of the [Clojure][ClojureHome] projects I've been working on uses
-multi-level (hierarchical) [maps][HashWikipedia] i.e. the values of the keys of a map at one level are often maps
-themselves. 
-
-A common enough use case and as [Fogus][FogusHome] and
+[Maps][HashWikipedia] are pervasive in many programming languages. As  [Fogus][FogusHome] and
 [Chris Houser][ChouserHome] observe in their book [The Joy of Clojure][BookJoC2ed] (section 5.6):
 
 #+BEGIN_QUOTE
@@ -39,6 +37,10 @@ famous quote to heart by providing a rich set of functions to manage maps:
 #+BEGIN_QUOTE
 It’s better to have 100 functions operate on one data structure than 10 functions on 10 data structures.
 #+END_QUOTE
+
+One of the [Clojure][ClojureHome] projects I've been working on uses
+multi-level (hierarchical) [maps][HashWikipedia] i.e. the values of the keys of a map at one level are often maps
+themselves. 
 
 But using deep (multi-level) maps with many levels and many keys with long-ish
 descriptive names can make the code look very cluttered and prone to
@@ -75,7 +77,7 @@ the details of the key hierarchy.  If the hierarchy needs to change for
 any reason, only the accessor functions have to be changed.  A familiar enough
 paradigm from many languages.
 
-The other thing I've wanted to do  has been
+The other thing I've wanted to do in the project  has been
 to apply  [contracts][Eiffel Design by Contract] to the _leaf_ values in the map. You could
 of course just use an [_assert_][ClojureDocsAssert] to apply a contract to a value in "open code".
 But that means the contract definition (i.e. assertion clause)
@@ -102,6 +104,7 @@ Enter my new library: [clojure-contracts-maps][ClojureMapAccessorsGithub]
 <!-- more -->
 #+END_SRC
 
+
 * A quick summary of clojure-contracts-maps
 
 Apart from the ability to apply rich contracts to the _leaf_ values,
@@ -120,6 +123,7 @@ value.
 You may also want to _monitor_ a key's access, especially when it
 changes, and have a unique error message - a _telltale_ - when a value
 fails a contract.
+
 
 * A few notes on contracts and constraints
 
@@ -161,6 +165,7 @@ in _clojure-contracts-sugar_
 Note you can define multiple mnemonics is the call to
 _define-mnemonics_, just add more key-value pairs in the
 _key-mnemonics_ map.
+
 
 * The Code
 
@@ -219,14 +224,8 @@ lein run -m map-examples1
                       define-map-put-accessor
                       compose-map-get-accessor
                       define-map-accessors
-                      define-mnemonics)]
-            ;;[clojure-potrubi.tests.harnesses :as potrubi-tests-harnesseses :refer (will-work will-fail)]
-            [clojure-carp :as carp]
-            [clojure-potrubi.traces.trace :as trace :refer (macro-set-trace set-trace trace-configure)]))
+                      define-mnemonics)]))
 
-(macro-set-trace true *ns* "ENTR")
-(set-trace true *ns* "ENTR")
-(trace-configure :first-telltale-format-specification "%-40s")
 #+END_SRC
 
 The examples use a couple of harness functions - _will-work_ and
@@ -492,7 +491,7 @@ Some examples should help flesh this out.
 To ensure a key's value is a positive number, the contract's vector of
 constraints would be:
 
-#+BEGIN_SRC clojure
+#+BEGIN_SRC clojure :tangle no
 [:number :pos]
 #+END_SRC
 
@@ -520,7 +519,7 @@ Using an example based on one in the [sugar
 post][RumfordBlogClojureContractsSugar], this one needs to ensure a key's new value is a map, and its keys are keywords and
 the values are numbers. The contract is:
 
-#+BEGIN_SRC  clojure
+#+BEGIN_SRC  clojure :tangle no
 [:map (every? keyword? (keys arg0)) (every? number? (vals arg0))]
 #+END_SRC
 
@@ -1143,6 +1142,7 @@ key's (new) value before storing in the (updated) map.
 _Monitors_ provide a simple way of adding arbitrary, but neutral
 non-affecting logic, to the key's access. And a _telltale_ helps pin
 down where things went wrong.
+
 
 * Final, Final Words
 

@@ -4,14 +4,7 @@
                       define-map-put-accessor
                       compose-map-get-accessor
                       define-map-accessors
-                      define-mnemonics)]
-            ;;[clojure-potrubi.tests.harnesses :as potrubi-tests-harnesseses :refer (will-work will-fail)]
-            [clojure-carp :as carp]
-            [clojure-potrubi.traces.trace :as trace :refer (macro-set-trace set-trace trace-configure)]))
-
-(macro-set-trace true *ns* "ENTR")
-(set-trace true *ns* "ENTR")
-(trace-configure :first-telltale-format-specification "%-40s")
+                      define-mnemonics)]))
 
 ;; Helper for accessor examples expected to work.  Returns the expected result, else fails
 

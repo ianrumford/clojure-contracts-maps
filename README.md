@@ -38,7 +38,7 @@ With Maven:
 
 ## Documentation & Examples
 
-This [post](http://ianrumford.github.io/blog/2014/02/19/applying-contracts-to-clojure-maps/) should give a reasonable overview of the library.
+This [post](http://ianrumford.github.io/blog/2014/03/19/two-sugars-with-your-contracts-for-clojure-maps/) should give a reasonable overview of the library.
 
 
 ## Testing
